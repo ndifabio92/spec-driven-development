@@ -1,0 +1,700 @@
+/* ============================================================================
+   EL ÚNICO SITIO donde se definen color, tipografía y espaciado (FR-008).
+   Contrato: specs/002-inicio-y-rediseno/contracts/sistema-visual.md
+
+   Ninguna regla de este archivo, ni ningún componente, escribe un color, un
+   tamaño de letra o una separación a mano: todo sale de estos tokens.
+   El generador del PDF los lee de aquí a través de src/estilos/tokens.ts, así
+   que cambiar un valor cambia la pantalla Y el documento que recibe el cliente.
+   ============================================================================ */
+
+:root {
+  /* --- Color: cuatro tonos ---------------------------------------------
+     1) Un neutro en cinco intensidades, 2) acento, 3) atención, 4) error.
+     No hay colores decorativos: si un color no está aquí, no se usa.      */
+  --color-tinta: #1b2430;
+  --color-tinta-suave: #5b6675;
+  --color-linea: #dde2e9;
+  --color-fondo: #f5f7fa;
+  --color-papel: #ffffff;
+
+  --color-acento: #134b72;
+  --color-atencion: #8a5a00;
+  --color-error: #a3271f;
+
+  /* --- Tipografía ------------------------------------------------------
+     Una sola familia, de métricas Helvetica/Arial, porque es la que el PDF
+     puede usar sin incrustar fuentes: así pantalla y documento se ven igual
+     (Decisión 2 de research.md).                                          */
+  --tipo-familia: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --tipo-titulo: 1.5rem;
+  --tipo-seccion: 1.125rem;
+  --tipo-base: 1rem; /* 16 px reales: por debajo, el móvil hace zoom solo */
+  --tipo-apoyo: 0.875rem;
+  --tipo-total: 1.375rem;
+
+  /* --- Espaciado: una escala, sin valores sueltos ---------------------- */
+  --espacio-1: 0.25rem;
+  --espacio-2: 0.75rem;
+  --espacio-3: 1rem;
+  --espacio-4: 1.5rem;
+  --espacio-5: 2.5rem;
+
+  /* --- Interacción ----------------------------------------------------- */
+  --toque: 44px;
+  --radio: 8px;
+  --sombra: 0 1px 2px rgba(27, 36, 48, 0.08);
+}
+
+/* ---------- Base ---------- */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-fondo);
+  color: var(--color-tinta);
+  font-family: var(--tipo-familia);
+  font-size: var(--tipo-base);
+  line-height: 1.5;
+}
+
+h1 {
+  font-size: var(--tipo-titulo);
+  line-height: 1.25;
+  margin: 0 0 var(--espacio-1);
+}
+
+h2 {
+  font-size: var(--tipo-seccion);
+  margin: 0 0 var(--espacio-2);
+}
+
+h3 {
+  font-size: var(--tipo-base);
+  margin: 0 0 var(--espacio-1);
+}
+
+a {
+  color: var(--color-acento);
+}
+
+/* ---------- Estructura ---------- */
+
+.cabecera {
+  background: var(--color-papel);
+  border-bottom: 1px solid var(--color-linea);
+  padding: var(--espacio-2) var(--espacio-3);
+}
+
+.cabecera-fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-2);
+  max-width: 62rem;
+  margin: 0 auto;
+}
+
+.marca {
+  font-weight: 700;
+  font-size: var(--tipo-seccion);
+  letter-spacing: -0.01em;
+  color: var(--color-acento);
+  text-decoration: none;
+}
+
+/* Los cinco accesos siempre visibles: si no caben, saltan de línea.
+   Nunca se esconden tras un menú ni tras un desplazamiento lateral (FR-005). */
+.navegacion {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-1);
+}
+
+.navegacion a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--toque);
+  padding: 0 var(--espacio-2);
+  border-radius: var(--radio);
+  border: 1px solid transparent;
+  color: var(--color-tinta-suave);
+  text-decoration: none;
+  font-size: var(--tipo-apoyo);
+  font-weight: 600;
+}
+
+.navegacion a:hover {
+  background: var(--color-fondo);
+  color: var(--color-acento);
+}
+
+/* La sección actual se marca con color, peso y un subrayado grueso, para que
+   se reconozca también sin distinguir colores (FR-006). */
+.navegacion a.activa {
+  color: var(--color-acento);
+  background: color-mix(in srgb, var(--color-acento) 8%, var(--color-papel));
+  border-color: color-mix(in srgb, var(--color-acento) 25%, var(--color-papel));
+  box-shadow: inset 0 -3px 0 0 var(--color-acento);
+}
+
+.contenido {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: var(--espacio-3) var(--espacio-3) var(--espacio-5);
+}
+
+.tarjeta {
+  background: var(--color-papel);
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra);
+  padding: var(--espacio-3);
+  margin-bottom: var(--espacio-3);
+}
+
+.subtitulo {
+  color: var(--color-tinta-suave);
+  font-size: var(--tipo-apoyo);
+  margin: 0 0 var(--espacio-3);
+}
+
+/* ---------- Formularios: una sola columna en móvil ---------- */
+
+.campo {
+  display: block;
+  margin-bottom: var(--espacio-3);
+}
+
+.campo-etiqueta {
+  display: block;
+  font-size: var(--tipo-apoyo);
+  font-weight: 600;
+  margin-bottom: var(--espacio-1);
+}
+
+.campo-ayuda {
+  display: block;
+  color: var(--color-tinta-suave);
+  font-size: var(--tipo-apoyo);
+  margin-top: var(--espacio-1);
+}
+
+/* El error se distingue de la ayuda por color, peso y un guion inicial: no
+   depende solo del color. */
+.campo-error {
+  display: block;
+  color: var(--color-error);
+  font-size: var(--tipo-apoyo);
+  font-weight: 600;
+  margin-top: var(--espacio-1);
+}
+
+.campo-error::before {
+  content: '— ';
+}
+
+input[type='text'],
+input[type='file'],
+select,
+textarea {
+  width: 100%;
+  min-height: var(--toque);
+  padding: var(--espacio-1) var(--espacio-2);
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radio);
+  background: var(--color-papel);
+  color: var(--color-tinta);
+  font-family: inherit;
+  font-size: var(--tipo-base);
+}
+
+textarea {
+  min-height: 6rem;
+  padding: var(--espacio-2);
+  resize: vertical;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-acento) 45%, transparent);
+  outline-offset: 1px;
+}
+
+input[aria-invalid='true'] {
+  border-color: var(--color-error);
+}
+
+fieldset {
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radio);
+  margin: 0 0 var(--espacio-3);
+  padding: var(--espacio-2);
+}
+
+legend {
+  font-size: var(--tipo-apoyo);
+  font-weight: 600;
+  padding: 0 var(--espacio-1);
+}
+
+fieldset[disabled] {
+  opacity: 0.6;
+}
+
+.opcion {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  min-height: var(--toque);
+}
+
+.opcion input {
+  width: 1.25rem;
+  height: 1.25rem;
+  accent-color: var(--color-acento);
+}
+
+.fila-opciones {
+  display: flex;
+  gap: var(--espacio-3);
+  flex-wrap: wrap;
+}
+
+/* ---------- Botones ---------- */
+
+.boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espacio-1);
+  min-height: var(--toque);
+  padding: var(--espacio-1) var(--espacio-3);
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radio);
+  background: var(--color-papel);
+  color: var(--color-tinta);
+  font-family: inherit;
+  font-size: var(--tipo-base);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.boton:hover:not(:disabled) {
+  background: var(--color-fondo);
+}
+
+.boton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.boton-principal {
+  background: var(--color-acento);
+  border-color: var(--color-acento);
+  color: var(--color-papel);
+}
+
+.boton-principal:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-acento) 85%, black);
+}
+
+.boton-peligro {
+  color: var(--color-error);
+  border-color: color-mix(in srgb, var(--color-error) 30%, var(--color-papel));
+}
+
+.boton-ancho {
+  width: 100%;
+}
+
+.grupo-botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-2);
+  margin-bottom: var(--espacio-3);
+}
+
+/* Lo mismo, pero para agrupar sin separar del bloque siguiente (filas de lista). */
+.fila-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espacio-2);
+}
+
+/* ---------- Avisos ---------- */
+
+.aviso {
+  border-radius: var(--radio);
+  padding: var(--espacio-2) var(--espacio-3);
+  margin-bottom: var(--espacio-3);
+  font-size: var(--tipo-apoyo);
+  border: 1px solid color-mix(in srgb, var(--color-atencion) 35%, var(--color-papel));
+  border-left-width: 4px;
+  background: color-mix(in srgb, var(--color-atencion) 8%, var(--color-papel));
+  color: var(--color-tinta);
+}
+
+.aviso-error {
+  border-color: color-mix(in srgb, var(--color-error) 35%, var(--color-papel));
+  background: color-mix(in srgb, var(--color-error) 7%, var(--color-papel));
+  color: var(--color-error);
+}
+
+.aviso-info {
+  border-color: var(--color-linea);
+  background: var(--color-papel);
+  color: var(--color-tinta-suave);
+}
+
+.aviso-cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--espacio-2);
+}
+
+.aviso p {
+  margin: 0;
+}
+
+/* ---------- Listas ---------- */
+
+.lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lista li + li {
+  border-top: 1px solid var(--color-linea);
+}
+
+.elemento-lista {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-2);
+  padding: var(--espacio-2) 0;
+}
+
+.elemento-lista-principal {
+  display: block;
+  font-weight: 600;
+  color: inherit;
+  text-decoration: none;
+}
+
+.elemento-lista-secundario {
+  display: block;
+  color: var(--color-tinta-suave);
+  font-size: var(--tipo-apoyo);
+  font-weight: 400;
+}
+
+.vacio {
+  color: var(--color-tinta-suave);
+  font-size: var(--tipo-apoyo);
+  padding: var(--espacio-2) 0;
+}
+
+/* ---------- Etiqueta de situación ----------
+   Cada situación lleva SIEMPRE su palabra escrita y un contorno distinto, para
+   distinguirse también en blanco y negro o sin percibir el color (FR-016). */
+
+.etiqueta {
+  display: inline-block;
+  font-size: var(--tipo-apoyo);
+  font-weight: 600;
+  line-height: 1.4;
+  padding: 0 var(--espacio-2);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.etiqueta-borrador {
+  color: var(--color-tinta-suave);
+  border: 1px dashed var(--color-tinta-suave);
+  background: var(--color-papel);
+}
+
+.etiqueta-vigente {
+  color: var(--color-acento);
+  border: 1px solid color-mix(in srgb, var(--color-acento) 40%, var(--color-papel));
+  background: color-mix(in srgb, var(--color-acento) 10%, var(--color-papel));
+}
+
+.etiqueta-caducado {
+  color: var(--color-atencion);
+  border: 1px solid color-mix(in srgb, var(--color-atencion) 45%, var(--color-papel));
+  background: color-mix(in srgb, var(--color-atencion) 12%, var(--color-papel));
+}
+
+/* ---------- Inicio ---------- */
+
+.resumen-actividad {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: var(--espacio-2);
+  margin-bottom: var(--espacio-3);
+}
+
+.dato {
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radio);
+  padding: var(--espacio-2);
+  background: var(--color-papel);
+}
+
+.dato-cifra {
+  display: block;
+  font-size: var(--tipo-total);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.dato-rotulo {
+  display: block;
+  color: var(--color-tinta-suave);
+  font-size: var(--tipo-apoyo);
+}
+
+.accesos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: var(--espacio-2);
+}
+
+.acceso {
+  display: block;
+  min-height: var(--toque);
+  padding: var(--espacio-2);
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radio);
+  background: var(--color-papel);
+  color: var(--color-tinta);
+  text-decoration: none;
+}
+
+.acceso:hover {
+  border-color: var(--color-acento);
+}
+
+.acceso strong {
+  display: block;
+  color: var(--color-acento);
+}
+
+.acceso span {
+  color: var(--color-tinta-suave);
+  font-size: var(--tipo-apoyo);
+}
+
+/* ---------- Tabla de líneas: tarjetas apiladas en móvil ---------- */
+
+.tabla-lineas {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabla-lineas thead {
+  display: none;
+}
+
+.tabla-lineas tr {
+  display: block;
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radio);
+  padding: var(--espacio-2);
+  margin-bottom: var(--espacio-2);
+  background: var(--color-papel);
+}
+
+.tabla-lineas td {
+  display: block;
+  padding: 0 0 var(--espacio-2);
+  border: 0;
+}
+
+/* Al apilarse, cada dato conserva su rótulo: si no, la tarjeta es indescifrable. */
+.tabla-lineas td::before {
+  content: attr(data-etiqueta);
+  display: block;
+  font-size: var(--tipo-apoyo);
+  font-weight: 600;
+  margin-bottom: var(--espacio-1);
+}
+
+.tabla-lineas td:last-child {
+  padding-bottom: 0;
+}
+
+.tabla-lineas .campo {
+  margin-bottom: 0;
+}
+
+.importe-linea {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.origen-linea {
+  display: inline-block;
+  font-size: var(--tipo-apoyo);
+  color: var(--color-tinta-suave);
+  border: 1px solid var(--color-linea);
+  border-radius: 999px;
+  padding: 0 var(--espacio-2);
+  margin-top: var(--espacio-1);
+}
+
+/* ---------- Resumen de totales ---------- */
+
+.resumen {
+  background: var(--color-papel);
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radio);
+  padding: var(--espacio-2) var(--espacio-3);
+}
+
+.resumen-fila {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--espacio-3);
+  padding: var(--espacio-1) 0;
+  font-size: var(--tipo-apoyo);
+  color: var(--color-tinta-suave);
+}
+
+.resumen-fila span:last-child {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-tinta);
+}
+
+/* El dato que el freelancer busca: manda sobre todo lo demás (FR-011). */
+.resumen-total {
+  border-top: 2px solid var(--color-tinta);
+  margin-top: var(--espacio-1);
+  padding-top: var(--espacio-2);
+  font-size: var(--tipo-total);
+  font-weight: 700;
+  color: var(--color-tinta);
+}
+
+/* En móvil se queda pegado abajo para no perderlo de vista al editar líneas. */
+.resumen-fijo {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  box-shadow: 0 -2px 10px rgba(27, 36, 48, 0.12);
+  margin: var(--espacio-3) calc(-1 * var(--espacio-3)) 0;
+  border-radius: var(--radio) var(--radio) 0 0;
+}
+
+/* ---------- Logo ---------- */
+
+.logo-vista-previa {
+  max-width: 200px;
+  max-height: 90px;
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radio);
+  background: var(--color-papel);
+  padding: var(--espacio-2);
+}
+
+/* ---------- Escritorio ---------- */
+
+@media (min-width: 40rem) {
+  .contenido {
+    padding: var(--espacio-4) var(--espacio-4) var(--espacio-5);
+  }
+
+  .tarjeta {
+    padding: var(--espacio-4);
+  }
+
+  h1 {
+    font-size: 1.75rem;
+  }
+
+  .rejilla-doble {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 var(--espacio-3);
+  }
+
+  .tabla-lineas thead {
+    display: table-header-group;
+  }
+
+  .tabla-lineas tr {
+    display: table-row;
+    border: 0;
+    border-bottom: 1px solid var(--color-linea);
+    border-radius: 0;
+    padding: 0;
+    margin: 0;
+    background: none;
+  }
+
+  .tabla-lineas th {
+    text-align: left;
+    padding: var(--espacio-1) var(--espacio-2) var(--espacio-1) 0;
+    border-bottom: 1px solid var(--color-tinta);
+    color: var(--color-tinta-suave);
+    font-size: var(--tipo-apoyo);
+  }
+
+  .tabla-lineas td {
+    display: table-cell;
+    padding: var(--espacio-2) var(--espacio-2) var(--espacio-2) 0;
+    vertical-align: top;
+  }
+
+  .tabla-lineas td::before {
+    display: none;
+  }
+
+  .tabla-lineas .columna-cantidad {
+    width: 7rem;
+  }
+
+  .tabla-lineas .columna-precio {
+    width: 9rem;
+  }
+
+  .tabla-lineas .columna-importe {
+    width: 8rem;
+    text-align: right;
+  }
+
+  .tabla-lineas .columna-acciones {
+    width: 7rem;
+  }
+
+  .resumen-fijo {
+    position: static;
+    box-shadow: var(--sombra);
+    margin: var(--espacio-3) 0 0 auto;
+    border-radius: var(--radio);
+    max-width: 24rem;
+  }
+
+  .boton-ancho {
+    width: auto;
+  }
+}
