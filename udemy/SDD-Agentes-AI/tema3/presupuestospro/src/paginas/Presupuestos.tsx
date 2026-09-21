@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useDatos } from '../almacen/useDatos'
 import { Aviso } from '../componentes/Aviso'
 import { Boton } from '../componentes/Boton'
+import { BotonExportar } from '../componentes/BotonExportar'
 import { EtiquetaSituacion } from '../componentes/EtiquetaSituacion'
 import { calcularPresupuesto } from '../dominio/calculo'
 import { formatearEuros, formatearFecha } from '../dominio/formato'
@@ -17,7 +18,7 @@ export function Presupuestos() {
 
   return (
     <>
-      <div className="tarjeta">
+      <div className="tarjeta tarjeta-destacada">
         <h1>Mis presupuestos</h1>
         <p className="subtitulo">
           Crea un presupuesto, añade tus líneas y descárgalo en PDF con tu marca.
@@ -28,7 +29,11 @@ export function Presupuestos() {
       </div>
 
       <div className="tarjeta">
-        <h2>Presupuestos creados</h2>
+        <div className="cabecera-seccion">
+          <h2>Presupuestos creados</h2>
+          {/* El mismo botón que en Inicio: la misma copia desde los dos sitios (FR-001). */}
+          <BotonExportar />
+        </div>
         {presupuestos.length === 0 ? (
           <p className="vacio">
             Aún no has creado ningún presupuesto. Antes de empezar puedes rellenar tu{' '}

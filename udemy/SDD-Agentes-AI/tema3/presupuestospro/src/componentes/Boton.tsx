@@ -8,6 +8,8 @@ interface Props {
   variante?: Variante
   tipo?: 'button' | 'submit'
   desactivado?: boolean
+  /** Esto esta en marcha. Un unico tratamiento para todo el producto (FR-043). */
+  ocupado?: boolean
   ancho?: boolean
   titulo?: string
 }
@@ -25,15 +27,17 @@ export function Boton({
   variante = 'secundario',
   tipo = 'button',
   desactivado = false,
+  ocupado = false,
   ancho = false,
   titulo,
 }: Props) {
   return (
     <button
       type={tipo}
-      className={`${CLASES[variante]}${ancho ? ' boton-ancho' : ''}`}
+      className={`${CLASES[variante]}${ancho ? ' boton-ancho' : ''}${ocupado ? ' ocupado' : ''}`}
       onClick={onClick}
       disabled={desactivado}
+      aria-busy={ocupado || undefined}
       title={titulo}
     >
       {children}

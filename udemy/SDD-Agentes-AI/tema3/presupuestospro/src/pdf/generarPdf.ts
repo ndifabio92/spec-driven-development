@@ -7,14 +7,23 @@
 //
 // Los importes NO se recalculan aquí de otra forma: se piden a dominio/calculo.ts,
 // el mismo módulo que alimenta la pantalla, para que PDF y pantalla coincidan siempre.
+//
+// NINGÚN TAMAÑO SE ESCRIBE A MANO (FR-051): todos salen de la escala tipográfica
+// del sistema visual con la conversión declarada 1 rem = 9 pt, y todas las
+// separaciones entre bloques salen de la escala de espaciado. El documento es más
+// denso que una pantalla —por eso 9 y no 12— y esa densidad es una decisión
+// escrita, no un descuido (Decisión 4 de research.md).
 
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { TIPO_IVA, calcularPresupuesto, importeLinea } from '../dominio/calculo'
 import { formatearEuros, formatearFecha, textoDeNumero } from '../dominio/formato'
 import type { Perfil, Presupuesto } from '../dominio/tipos'
-import { colorPdf } from '../estilos/tokens'
+import { colorPdf, espacioPdf, interlineadoPdf, tamanoPdf } from '../estilos/tokens'
 
+// Geometria del papel, no del sistema visual: un A4 mide lo que mide y los
+// margenes los fija el contrato de contenido de la 001. No son tokens y no
+// pueden serlo; quedan aqui justificados por escrito (FR-051).
 const MARGEN = 15
 const ANCHO_PAGINA = 210
 const ALTO_PAGINA = 297
@@ -32,15 +41,18 @@ export function nombreArchivoPdf(presupuesto: Presupuesto): string {
 /** Construye el documento completo, sin descargarlo. */
 export function construirDocumento(presupuesto: Presupuesto, perfil: Perfil): jsPDF {
   const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' })
+  // La familia de métricas que el PDF lleva de serie. El documento NO incrusta
+  // tipografías (FR-052): una fuente incrustada se repite en cada PDF y el coste
+  // de una exportación en lote se multiplicaría por el número de presupuestos.
   doc.setFont('helvetica', 'normal')
 
   const tema = leerTema()
 
   dibujarBanda(doc, tema)
   const finCabecera = dibujarCabecera(doc, presupuesto, perfil, tema)
-  const finDestinatario = dibujarDestinatario(doc, presupuesto, tema, finCabecera + 10)
-  const finTabla = dibujarLineas(doc, presupuesto, tema, finDestinatario + 8)
-  dibujarDesglose(doc, presupuesto, tema, finTabla + 10)
+  const finDestinatario = dibujarDestinatario(doc, presupuesto, tema, finCabecera + tema.aireBloque)
+  const finTabla = dibujarLineas(doc, presupuesto, tema, finDestinatario + tema.aireMedio)
+  dibujarDesglose(doc, presupuesto, tema, finTabla + tema.aireBloque)
 
   return doc
 }
@@ -54,8 +66,22 @@ interface Tema {
   tinta: [number, number, number]
   tintaSuave: [number, number, number]
   linea: [number, number, number]
+  lineaFuerte: [number, number, number]
   acento: [number, number, number]
+  acentoSuave: [number, number, number]
   papel: [number, number, number]
+  /** Tamaños en puntos, derivados de la escala del sistema. */
+  apoyo: number
+  base: number
+  seccion: number
+  titulo: number
+  total: number
+  /** Separaciones en milímetros, derivadas de la escala de espaciado. */
+  aireBloque: number
+  aireMedio: number
+  aireCorto: number
+  /** Alto de una línea de texto normal, en milímetros. */
+  renglon: number
 }
 
 /** Los mismos tokens que la pantalla. Si alguno no se puede leer, se usa su respaldo. */
@@ -64,8 +90,19 @@ function leerTema(): Tema {
     tinta: colorPdf('--color-tinta'),
     tintaSuave: colorPdf('--color-tinta-suave'),
     linea: colorPdf('--color-linea'),
+    lineaFuerte: colorPdf('--color-linea-fuerte'),
     acento: colorPdf('--color-acento'),
+    acentoSuave: colorPdf('--color-acento-suave'),
     papel: colorPdf('--color-papel'),
+    apoyo: tamanoPdf('--tipo-apoyo'),
+    base: tamanoPdf('--tipo-base'),
+    seccion: tamanoPdf('--tipo-seccion'),
+    titulo: tamanoPdf('--tipo-titulo'),
+    total: tamanoPdf('--tipo-total'),
+    aireBloque: espacioPdf('--espacio-7'),
+    aireMedio: espacioPdf('--espacio-6'),
+    aireCorto: espacioPdf('--espacio-5'),
+    renglon: interlineadoPdf('--tipo-base'),
   }
 }
 
@@ -82,24 +119,33 @@ function dibujarCabecera(doc: jsPDF, presupuesto: Presupuesto, perfil: Perfil, t
   if (perfil.logo) {
     const { ancho, alto } = medidasLogo(perfil.logo.ancho, perfil.logo.alto)
     try {
-      doc.addImage(perfil.logo.datos, formatoImagen(perfil.logo.datos), MARGEN, yIzquierda, ancho, alto)
-      yIzquierda += alto + 6
+      doc.addImage(
+        perfil.logo.datos,
+        formatoImagen(perfil.logo.datos),
+        MARGEN,
+        yIzquierda,
+        ancho,
+        alto,
+      )
+      // Aire entre el logo y el nombre: el acento de la banda y los colores del
+      // logo se separan en vez de teñirse el uno al otro (D5 de las Clarifications).
+      yIzquierda += alto + tema.aireCorto
     } catch {
       // Un logo ilegible no puede impedir que el presupuesto salga: se omite y sigue.
     }
   }
 
   // Sin logo, el bloque del emisor sube hasta arriba y no queda hueco (FR-023).
-  doc.setFontSize(12)
+  doc.setFontSize(tema.seccion)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(...tema.tinta)
   if (perfil.nombre.trim() !== '') {
-    doc.text(perfil.nombre, MARGEN, yIzquierda + 4)
-    yIzquierda += 5
+    doc.text(perfil.nombre, MARGEN, yIzquierda + tema.aireCorto / 2)
+    yIzquierda += tema.renglon
   }
 
   doc.setFont('helvetica', 'normal')
-  doc.setFontSize(9)
+  doc.setFontSize(tema.base)
   doc.setTextColor(...tema.tintaSuave)
   const datosEmisor = [
     perfil.nif.trim() !== '' ? `NIF: ${perfil.nif}` : null,
@@ -107,30 +153,31 @@ function dibujarCabecera(doc: jsPDF, presupuesto: Presupuesto, perfil: Perfil, t
   ].filter((linea): linea is string => linea !== null)
 
   for (const linea of datosEmisor) {
-    yIzquierda += 4.5
+    yIzquierda += tema.renglon
     doc.text(linea, MARGEN, yIzquierda)
   }
 
-  // Bloque derecho: título, número y fechas.
-  let yDerecha = ARRIBA + 6
+  // Bloque derecho: título, número y fechas. El título baja de rango porque el
+  // elemento mayor del documento pasa a ser el total a pagar (FR-011).
+  let yDerecha = ARRIBA + tema.aireCorto
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(24)
+  doc.setFontSize(tema.titulo)
   doc.setTextColor(...tema.acento)
   doc.text('Presupuesto', DERECHA, yDerecha, { align: 'right' })
 
-  yDerecha += 8
-  doc.setFontSize(12)
+  yDerecha += tema.aireMedio
+  doc.setFontSize(tema.seccion)
   doc.setTextColor(...tema.tinta)
   doc.text(presupuesto.numero, DERECHA, yDerecha, { align: 'right' })
 
   doc.setFont('helvetica', 'normal')
-  doc.setFontSize(9)
+  doc.setFontSize(tema.base)
   doc.setTextColor(...tema.tintaSuave)
-  yDerecha += 6
+  yDerecha += tema.aireCorto
   doc.text(`Fecha de emisión: ${formatearFecha(presupuesto.fechaEmision)}`, DERECHA, yDerecha, {
     align: 'right',
   })
-  yDerecha += 4.5
+  yDerecha += tema.renglon
   doc.text(`Válido hasta el ${formatearFecha(presupuesto.fechaValidez)}`, DERECHA, yDerecha, {
     align: 'right',
   })
@@ -139,33 +186,28 @@ function dibujarCabecera(doc: jsPDF, presupuesto: Presupuesto, perfil: Perfil, t
 }
 
 /** Datos del cliente tal como estaban al crear el presupuesto (FR-016 de la 001). */
-function dibujarDestinatario(
-  doc: jsPDF,
-  presupuesto: Presupuesto,
-  tema: Tema,
-  y: number,
-): number {
+function dibujarDestinatario(doc: jsPDF, presupuesto: Presupuesto, tema: Tema, y: number): number {
   let cursor = y
 
   doc.setDrawColor(...tema.linea)
   doc.setLineWidth(0.2)
-  doc.line(MARGEN, cursor - 5, DERECHA, cursor - 5)
+  doc.line(MARGEN, cursor - tema.aireCorto, DERECHA, cursor - tema.aireCorto)
 
   doc.setFont('helvetica', 'normal')
-  doc.setFontSize(8)
+  doc.setFontSize(tema.apoyo)
   doc.setTextColor(...tema.tintaSuave)
   // El rótulo se queda tal cual estaba: cambiarlo, aunque sea de caja, sería
   // tocar el contenido del documento, y el contrato solo permite tocar su cara.
   doc.text('Presupuesto para', MARGEN, cursor)
 
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(12)
+  doc.setFontSize(tema.seccion)
   doc.setTextColor(...tema.tinta)
-  cursor += 6
+  cursor += tema.aireCorto
   doc.text(presupuesto.cliente.nombre, MARGEN, cursor)
 
   doc.setFont('helvetica', 'normal')
-  doc.setFontSize(9)
+  doc.setFontSize(tema.base)
   doc.setTextColor(...tema.tintaSuave)
   const datosCliente = [
     presupuesto.cliente.nif.trim() !== '' ? `NIF: ${presupuesto.cliente.nif}` : null,
@@ -173,7 +215,7 @@ function dibujarDestinatario(
   ].filter((linea): linea is string => linea !== null)
 
   for (const linea of datosCliente) {
-    cursor += 4.5
+    cursor += tema.renglon
     doc.text(linea, MARGEN, cursor)
   }
 
@@ -197,18 +239,25 @@ function dibujarLineas(doc: jsPDF, presupuesto: Presupuesto, tema: Tema, y: numb
     theme: 'plain',
     styles: {
       font: 'helvetica',
-      fontSize: 9.5,
-      cellPadding: { top: 2.5, right: 2, bottom: 2.5, left: 0 },
+      fontSize: tema.base,
+      cellPadding: {
+        top: espacioPdf('--espacio-3'),
+        right: espacioPdf('--espacio-2'),
+        bottom: espacioPdf('--espacio-3'),
+        left: 0,
+      },
       textColor: tema.tinta,
       lineColor: tema.linea,
       lineWidth: { top: 0, right: 0, bottom: 0.2, left: 0 },
     },
+    // La cabecera estructura la tabla, así que lleva el tono de línea que
+    // estructura, no el de separar filas.
     headStyles: {
-      fontSize: 8,
+      fontSize: tema.apoyo,
       fontStyle: 'bold',
       textColor: tema.tintaSuave,
-      lineColor: tema.tinta,
-      lineWidth: { top: 0, right: 0, bottom: 0.4, left: 0 },
+      lineColor: tema.lineaFuerte,
+      lineWidth: { top: 0, right: 0, bottom: 0.5, left: 0 },
     },
     columnStyles: {
       1: { halign: 'right', cellWidth: 20 },
@@ -237,8 +286,11 @@ function dibujarDesglose(doc: jsPDF, presupuesto: Presupuesto, tema: Tema, y: nu
   }
 
   const ANCHO_BLOQUE = 78
-  const ALTO_TOTAL = 14
-  const altoBloque = filas.length * 5.5 + ALTO_TOTAL + 4
+  const altoFila = tema.renglon
+  // El total sube de rango, así que su franja crece con él en vez de quedarse en
+  // una medida escrita a mano. Es el requisito con más riesgo de esta revisión.
+  const altoTotal = puntosAMm(tema.total) + tema.aireCorto
+  const altoBloque = filas.length * altoFila + altoTotal + tema.aireMedio
 
   // Si no cabe entero, pasa entero a la página siguiente (FR-022).
   let cursor = y
@@ -250,29 +302,42 @@ function dibujarDesglose(doc: jsPDF, presupuesto: Presupuesto, tema: Tema, y: nu
 
   const izquierda = DERECHA - ANCHO_BLOQUE
 
+  // El desglose es un bloque destacado, con el mismo relleno teñido que en
+  // pantalla: la aplicación y el documento comparten color, aire y jerarquía.
+  doc.setFillColor(...tema.acentoSuave)
+  doc.rect(
+    izquierda - tema.aireCorto,
+    cursor - tema.aireCorto,
+    ANCHO_BLOQUE + tema.aireCorto,
+    filas.length * altoFila + tema.aireCorto,
+    'F',
+  )
+
   doc.setFont('helvetica', 'normal')
-  doc.setFontSize(9.5)
+  doc.setFontSize(tema.base)
   for (const [etiqueta, importe] of filas) {
     doc.setTextColor(...tema.tintaSuave)
     doc.text(etiqueta, izquierda, cursor)
     doc.setTextColor(...tema.tinta)
     doc.text(importe, DERECHA, cursor, { align: 'right' })
-    cursor += 5.5
+    cursor += altoFila
   }
 
-  // El total: el dato que el cliente busca, claramente separado del resto.
-  cursor += 1
+  // El total: el elemento tipográficamente mayor del documento (FR-011).
   doc.setFillColor(...tema.acento)
-  doc.rect(izquierda - 3, cursor, ANCHO_BLOQUE + 3, ALTO_TOTAL, 'F')
+  doc.rect(izquierda - tema.aireCorto, cursor, ANCHO_BLOQUE + tema.aireCorto, altoTotal, 'F')
 
   doc.setTextColor(...tema.papel)
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(10)
-  doc.text('Total a pagar', izquierda, cursor + ALTO_TOTAL / 2 + 1.5)
-  doc.setFontSize(14)
-  doc.text(formatearEuros(totales.total), DERECHA - 3, cursor + ALTO_TOTAL / 2 + 2, {
-    align: 'right',
-  })
+  doc.setFontSize(tema.base)
+  doc.text('Total a pagar', izquierda, cursor + altoTotal / 2 + puntosAMm(tema.base) / 3)
+  doc.setFontSize(tema.total)
+  doc.text(
+    formatearEuros(totales.total),
+    DERECHA - tema.aireCorto / 2,
+    cursor + altoTotal / 2 + puntosAMm(tema.total) / 3,
+    { align: 'right' },
+  )
 }
 
 /** Máximo 40 mm de ancho, respetando la proporción original del logo. */
@@ -290,6 +355,11 @@ function medidasLogo(anchoOriginal: number, altoOriginal: number): { ancho: numb
   }
 
   return { ancho, alto }
+}
+
+/** Los tamaños llegan en puntos y el documento se dibuja en milímetros. */
+function puntosAMm(puntos: number): number {
+  return (puntos * 25.4) / 72
 }
 
 function formatoImagen(datos: string): 'PNG' | 'JPEG' {

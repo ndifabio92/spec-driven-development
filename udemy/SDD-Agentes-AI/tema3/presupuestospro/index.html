@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Crea presupuestos con IVA y retención de IRPF calculados solos y descárgalos en PDF." />
     <title>PresupuestosPro</title>
+    <!-- La familia de lectura se precarga para que la ventana en la que se ve la letra
+         del sistema sea de milisegundos. Viaja en el propio alojamiento: ninguna
+         peticion a un tercero, ni una direccion del freelancer fuera (FR-035). -->
+    <link rel="preload" href="/fuentes/figtree-variable-latin.woff2" as="font" type="font/woff2" crossorigin />
   </head>
   <body>
     <div id="raiz"></div>

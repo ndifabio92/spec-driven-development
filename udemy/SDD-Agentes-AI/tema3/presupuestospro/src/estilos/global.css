@@ -1,50 +1,153 @@
 /* ============================================================================
-   EL ÚNICO SITIO donde se definen color, tipografía y espaciado (FR-008).
+   Tipografías del producto (FR-031, FR-035)
+
+   Los dos archivos viven en public/fuentes/ y se sirven desde el propio
+   alojamiento: NINGUNA petición a un servidor de fuentes, así que la dirección
+   del freelancer no viaja a ningún tercero (Principio V de la constitución).
+   Si un archivo no llega, el respaldo del sistema mantiene todo legible.
+
+   Su licencia (SIL Open Font License 1.1) viaja en public/fuentes/OFL.txt:
+   publicar dist/ sin ese archivo incumpliría la licencia.
+   ============================================================================ */
+
+@font-face {
+  font-family: 'Figtree';
+  /* Un solo archivo variable cubre los tres grosores del sistema (400, 500 y 700):
+     dos descargas menos que con archivos estáticos (Decisión 2 de research.md). */
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fuentes/figtree-variable-latin.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  /* Solo el grosor fuerte: es el único que usa la familia de titulares. */
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fuentes/bricolage-grotesque-700-latin.woff2') format('woff2');
+}
+
+/* ============================================================================
+   EL ÚNICO SITIO donde se definen color, tipografía, espaciado, forma,
+   elevación y movimiento (FR-008, FR-051).
    Contrato: specs/002-inicio-y-rediseno/contracts/sistema-visual.md
 
-   Ninguna regla de este archivo, ni ningún componente, escribe un color, un
-   tamaño de letra o una separación a mano: todo sale de estos tokens.
-   El generador del PDF los lee de aquí a través de src/estilos/tokens.ts, así
-   que cambiar un valor cambia la pantalla Y el documento que recibe el cliente.
+   Ninguna regla de este archivo, ni ningún componente, ni el generador del PDF,
+   escribe un valor visual a mano: todo sale de estos tokens.
+
+   LA REGLA QUE MANDA SOBRE TODAS: los tokens que lee el PDF son VALORES PLANOS.
+   El generador pregunta al navegador por el token y recibe el texto sin
+   resolver; si un token fuese una expresión calculada, el PDF caería a su valor
+   de respaldo SIN AVISAR y saldría un documento con colores o tamaños
+   equivocados que nadie detectaría. La fluidez y las mezclas viven en la regla
+   que las usa, nunca en el valor del token (Decisión 5 de research.md).
    ============================================================================ */
 
 :root {
-  /* --- Color: cuatro tonos ---------------------------------------------
-     1) Un neutro en cinco intensidades, 2) acento, 3) atención, 4) error.
-     No hay colores decorativos: si un color no está aquí, no se usa.      */
-  --color-tinta: #1b2430;
-  --color-tinta-suave: #5b6675;
-  --color-linea: #dde2e9;
-  --color-fondo: #f5f7fa;
+  /* --- Color -----------------------------------------------------------
+     Neutros cálidos, un acento de acción y tres tonos con significado.
+     UN COLOR, UN SIGNIFICADO (FR-036): terracota = acción y marca;
+     oliva = vigente y confirmación; atención = caducado y aviso;
+     error = lo que hay que corregir. Ninguno hace dos trabajos.
+     Los contrastes están comprobados contra FR-037 y no se cambian sin
+     recalcularlos: el valor de al lado dice contra qué llega.            */
+  --color-fondo: #fff8f3;
   --color-papel: #ffffff;
+  --color-tinta: #241a15; /* 15,0:1 sobre papel */
+  --color-tinta-suave: #7a6a62; /* 5,2:1 — texto secundario */
+  --color-tinta-tenue: #8d7d74; /* 3,9:1 — solo texto inactivo */
 
-  --color-acento: #134b72;
-  --color-atencion: #8a5a00;
-  --color-error: #a3271f;
+  /* Tres líneas, tres trabajos. Confundirlas deja un formulario sin contraste:
+     el contorno de un campo NUNCA usa --color-linea. */
+  --color-linea: #f0e2d8; /* separa filas y bordea tarjetas */
+  --color-linea-fuerte: #e0cbbd; /* estructura: cabecera de tabla, regla del total */
+  --color-borde-control: #a08a7c; /* 3,3:1 — contorno de lo que se escribe o se pulsa */
+
+  --color-acento: #b34a25; /* 5,4:1 — y no #c4562f, que se queda en 4,48:1 */
+  --color-acento-pulsado: #8f3a1c;
+  --color-acento-suave: #fbebe3;
+  --color-oliva: #4e5f33; /* 6,9:1 — situación Vigente y confirmaciones */
+  --color-atencion: #8a5a0e; /* 5,9:1 — avisos y situación Caducado */
+  --color-error: #a32a22; /* 6,4:1 — errores y acciones destructivas */
 
   /* --- Tipografía ------------------------------------------------------
-     Una sola familia, de métricas Helvetica/Arial, porque es la que el PDF
-     puede usar sin incrustar fuentes: así pantalla y documento se ven igual
-     (Decisión 2 de research.md).                                          */
-  --tipo-familia: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  --tipo-titulo: 1.5rem;
-  --tipo-seccion: 1.125rem;
+     Dos familias con un trabajo cada una (FR-031): la de titulares solo en
+     el título de pantalla y la marca. Escala de cinco niveles: entre el
+     texto normal y cada nivel superior hay al menos 4 px (FR-032).        */
+  --tipo-familia-titular: 'Bricolage Grotesque', system-ui, sans-serif;
+  --tipo-familia: 'Figtree', system-ui, -apple-system, sans-serif;
+
+  --tipo-apoyo: 0.875rem; /* 14 px */
   --tipo-base: 1rem; /* 16 px reales: por debajo, el móvil hace zoom solo */
-  --tipo-apoyo: 0.875rem;
-  --tipo-total: 1.375rem;
+  --tipo-seccion: 1.25rem; /* 20 px */
+  --tipo-titulo: 1.75rem; /* 28 px — extremo inferior del rango fluido */
+  --tipo-titulo-amplio: 2.25rem; /* 36 px — extremo superior */
+  --tipo-total: 2rem; /* 32 px — el dato que más se busca */
 
-  /* --- Espaciado: una escala, sin valores sueltos ---------------------- */
-  --espacio-1: 0.25rem;
-  --espacio-2: 0.75rem;
-  --espacio-3: 1rem;
-  --espacio-4: 1.5rem;
-  --espacio-5: 2.5rem;
+  /* Tres pesos, tres trabajos (FR-033). Se acabó el grosor único. */
+  --peso-normal: 400;
+  --peso-medio: 500;
+  --peso-fuerte: 700;
 
-  /* --- Interacción ----------------------------------------------------- */
-  --toque: 44px;
-  --radio: 8px;
-  --sombra: 0 1px 2px rgba(27, 36, 48, 0.08);
+  --letra-titular: -0.02em;
+  --letra-cifra: -0.01em;
+  --linea-apretada: 1.15;
+  --linea-normal: 1.55;
+
+  /* --- Espaciado: base 4, siete peldaños, sin huecos (FR-040) ---------- */
+  --espacio-1: 0.25rem; /* 4 px */
+  --espacio-2: 0.5rem; /* 8 px — el peldaño que faltaba */
+  --espacio-3: 0.75rem; /* 12 px */
+  --espacio-4: 1rem; /* 16 px */
+  --espacio-5: 1.5rem; /* 24 px */
+  --espacio-6: 2rem; /* 32 px */
+  --espacio-7: 3rem; /* 48 px */
+
+  /* --- Forma: tres esquinas, tres jerarquías (FR-042) ------------------ */
+  --radio-1: 8px; /* campos, etiquetas */
+  --radio-2: 14px; /* botones y tarjetas */
+  --radio-3: 20px; /* tarjeta destacada y bloque de totales */
+  --radio-pastilla: 999px;
+
+  /* --- Elevación: tres niveles, no uno (FR-042) ------------------------ */
+  --sombra-1: 0 1px 2px rgba(36, 26, 21, 0.06);
+  --sombra-2: 0 2px 8px rgba(36, 26, 21, 0.08), 0 8px 24px rgba(36, 26, 21, 0.06);
+  --sombra-3: 0 -6px 24px rgba(36, 26, 21, 0.12);
+
+  /* --- Movimiento: dos duraciones y ninguna más (FR-046) --------------- */
+  --transicion-rapida: 120ms ease-out;
+  --transicion: 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* --- Interacción y anchuras ------------------------------------------ */
+  --toque: 44px; /* heredado de la v1.1, intocable */
+  --ancho-contenido: 68rem;
+  --ancho-texto: 42rem;
 }
+
+/* ============================================================================
+   Auditoría de valores sueltos (FR-051)
+
+   El contrato prohíbe escribir a mano color, tamaño de letra, separación,
+   esquina, sombra y duración. Todos salen ya de los tokens de arriba, aquí y en
+   el generador del PDF. Lo que queda escrito con un número, y por qué:
+
+   - Grosores de línea (1px, 2px, 3px, 4px): el grosor de un borde no es ninguna
+     de las seis cosas que el contrato regula, y una escala de grosores para
+     cuatro valores sería infraestructura sin necesidad (Principio I).
+   - Medidas de caja: alto mínimo del área de texto, límites del logo en el
+     perfil, anchuras de las columnas de la tabla y ancho mínimo de un acceso.
+     Son cuánto ocupa un contenido concreto, no ritmo compartido; convertirlas en
+     tokens no las haría coherentes con nada.
+   - El 1.35rem + 2vw del título fluido: es la pendiente de la interpolación
+     entre dos tokens, y vive en la regla justo para que los tokens sigan siendo
+     valores planos y el PDF pueda leerlos.
+   - El 1px de translateY al pulsar: es el hundimiento del botón, un gesto, no
+     una separación de la escala.
+
+   Si aparece un valor suelto que no esté en esta lista, sobra.
+   ============================================================================ */
 
 /* ---------- Base ---------- */
 
@@ -62,35 +165,74 @@ body {
   color: var(--color-tinta);
   font-family: var(--tipo-familia);
   font-size: var(--tipo-base);
-  line-height: 1.5;
+  font-weight: var(--peso-normal);
+  line-height: var(--linea-normal);
+  -webkit-font-smoothing: antialiased;
 }
 
+/* El título de pantalla es fluido, pero la fluidez vive AQUÍ, compuesta entre
+   dos tokens planos. Si la expresión estuviera en el token, el PDF recibiría
+   una fórmula y caería a su respaldo sin avisar (Decisión 5 de research.md). */
 h1 {
-  font-size: var(--tipo-titulo);
-  line-height: 1.25;
-  margin: 0 0 var(--espacio-1);
+  font-family: var(--tipo-familia-titular);
+  font-size: clamp(var(--tipo-titulo), 1.35rem + 2vw, var(--tipo-titulo-amplio));
+  font-weight: var(--peso-fuerte);
+  letter-spacing: var(--letra-titular);
+  line-height: var(--linea-apretada);
+  margin: 0 0 var(--espacio-2);
 }
 
 h2 {
   font-size: var(--tipo-seccion);
+  font-weight: var(--peso-fuerte);
+  letter-spacing: var(--letra-titular);
+  line-height: var(--linea-apretada);
+  margin: 0 0 var(--espacio-3);
+}
+
+/* Por encima del párrafo, no a su mismo tamaño como en la v1.1. */
+h3 {
+  font-size: var(--tipo-base);
+  font-weight: var(--peso-fuerte);
   margin: 0 0 var(--espacio-2);
 }
 
-h3 {
-  font-size: var(--tipo-base);
-  margin: 0 0 var(--espacio-1);
+p {
+  max-width: var(--ancho-texto);
 }
 
 a {
   color: var(--color-acento);
 }
 
+a:hover {
+  color: var(--color-acento-pulsado);
+}
+
+/* Cuando el freelancer pide reducir el movimiento, no hay ninguno. Los estados
+   se siguen distinguiendo por color y posición, no por la animación (FR-046). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* ---------- Estructura ---------- */
 
+/* Anclada arriba a partir de escritorio (FR-050). En móvil NO se ancla: los
+   cinco accesos más la marca no caben en una línea en un teléfono estrecho, y
+   una cabecera anclada de dos filas se comería el editor justo donde se trabaja
+   —con el total ya anclado abajo—. Es la salida que el contrato de navegación
+   deja escrita; la alternativa prohibida sería esconder accesos tras un menú. */
 .cabecera {
   background: var(--color-papel);
   border-bottom: 1px solid var(--color-linea);
-  padding: var(--espacio-2) var(--espacio-3);
+  padding: var(--espacio-3) var(--espacio-4);
 }
 
 .cabecera-fila {
@@ -98,15 +240,16 @@ a {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--espacio-2);
-  max-width: 62rem;
+  gap: var(--espacio-3);
+  max-width: var(--ancho-contenido);
   margin: 0 auto;
 }
 
 .marca {
-  font-weight: 700;
+  font-family: var(--tipo-familia-titular);
+  font-weight: var(--peso-fuerte);
   font-size: var(--tipo-seccion);
-  letter-spacing: -0.01em;
+  letter-spacing: var(--letra-titular);
   color: var(--color-acento);
   text-decoration: none;
 }
@@ -116,68 +259,85 @@ a {
 .navegacion {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--espacio-1);
+  gap: var(--espacio-2); /* 8 px: se ve el hueco, no se tocan (SC-014) */
 }
 
 .navegacion a {
   display: inline-flex;
   align-items: center;
   min-height: var(--toque);
-  padding: 0 var(--espacio-2);
-  border-radius: var(--radio);
+  padding: 0 var(--espacio-3);
+  border-radius: var(--radio-2);
   border: 1px solid transparent;
   color: var(--color-tinta-suave);
   text-decoration: none;
   font-size: var(--tipo-apoyo);
-  font-weight: 600;
+  font-weight: var(--peso-medio);
+  transition: background var(--transicion-rapida), color var(--transicion-rapida),
+    border-color var(--transicion-rapida);
 }
 
 .navegacion a:hover {
-  background: var(--color-fondo);
-  color: var(--color-acento);
+  background: var(--color-acento-suave);
+  color: var(--color-acento-pulsado);
+  border-color: var(--color-linea-fuerte);
+}
+
+.navegacion a:active {
+  background: var(--color-acento-suave);
+  color: var(--color-acento-pulsado);
+  transform: translateY(1px);
 }
 
 /* La sección actual se marca con color, peso y un subrayado grueso, para que
-   se reconozca también sin distinguir colores (FR-006). */
+   se reconozca también sin distinguir colores (FR-006, FR-039). */
 .navegacion a.activa {
   color: var(--color-acento);
-  background: color-mix(in srgb, var(--color-acento) 8%, var(--color-papel));
-  border-color: color-mix(in srgb, var(--color-acento) 25%, var(--color-papel));
+  background: var(--color-acento-suave);
+  border-color: var(--color-linea-fuerte);
+  font-weight: var(--peso-fuerte);
   box-shadow: inset 0 -3px 0 0 var(--color-acento);
 }
 
 .contenido {
-  max-width: 62rem;
+  max-width: var(--ancho-contenido);
   margin: 0 auto;
-  padding: var(--espacio-3) var(--espacio-3) var(--espacio-5);
+  padding: var(--espacio-4) var(--espacio-4) var(--espacio-7);
 }
 
 .tarjeta {
   background: var(--color-papel);
   border: 1px solid var(--color-linea);
-  border-radius: var(--radio);
-  box-shadow: var(--sombra);
-  padding: var(--espacio-3);
-  margin-bottom: var(--espacio-3);
+  border-radius: var(--radio-2);
+  box-shadow: var(--sombra-1);
+  padding: var(--espacio-4);
+  margin-bottom: var(--espacio-4);
+}
+
+/* La tarjeta de entrada de cada pantalla manda sobre las demás. */
+.tarjeta-destacada {
+  border-radius: var(--radio-3);
+  box-shadow: var(--sombra-2);
 }
 
 .subtitulo {
   color: var(--color-tinta-suave);
   font-size: var(--tipo-apoyo);
-  margin: 0 0 var(--espacio-3);
+  max-width: var(--ancho-texto);
+  margin: 0 0 var(--espacio-4);
 }
 
 /* ---------- Formularios: una sola columna en móvil ---------- */
 
 .campo {
   display: block;
-  margin-bottom: var(--espacio-3);
+  margin-bottom: var(--espacio-4);
 }
 
 .campo-etiqueta {
   display: block;
   font-size: var(--tipo-apoyo);
-  font-weight: 600;
+  font-weight: var(--peso-medio);
   margin-bottom: var(--espacio-1);
 }
 
@@ -189,12 +349,12 @@ a {
 }
 
 /* El error se distingue de la ayuda por color, peso y un guion inicial: no
-   depende solo del color. */
+   depende solo del color (FR-039). */
 .campo-error {
   display: block;
   color: var(--color-error);
   font-size: var(--tipo-apoyo);
-  font-weight: 600;
+  font-weight: var(--peso-fuerte);
   margin-top: var(--espacio-1);
 }
 
@@ -202,34 +362,44 @@ a {
   content: '— ';
 }
 
+/* El contorno de un control llega a 3:1: es la única señal de que ahí se puede
+   escribir, así que NO puede usar el tono de separar filas (FR-037). */
 input[type='text'],
 input[type='file'],
 select,
 textarea {
   width: 100%;
   min-height: var(--toque);
-  padding: var(--espacio-1) var(--espacio-2);
-  border: 1px solid var(--color-linea);
-  border-radius: var(--radio);
+  padding: var(--espacio-2) var(--espacio-3);
+  border: 1px solid var(--color-borde-control);
+  border-radius: var(--radio-1);
   background: var(--color-papel);
   color: var(--color-tinta);
   font-family: inherit;
   font-size: var(--tipo-base);
+  transition: border-color var(--transicion-rapida), box-shadow var(--transicion-rapida);
+}
+
+input[type='text']:hover,
+select:hover,
+textarea:hover {
+  border-color: var(--color-acento-pulsado);
 }
 
 textarea {
   min-height: 6rem;
-  padding: var(--espacio-2);
+  padding: var(--espacio-3);
   resize: vertical;
 }
 
+/* El mismo anillo en enlaces, botones y campos, sin excepción (FR-045). */
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
 button:focus-visible,
 a:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--color-acento) 45%, transparent);
-  outline-offset: 1px;
+  outline: 3px solid var(--color-acento);
+  outline-offset: 2px;
 }
 
 input[aria-invalid='true'] {
@@ -238,25 +408,34 @@ input[aria-invalid='true'] {
 
 fieldset {
   border: 1px solid var(--color-linea);
-  border-radius: var(--radio);
-  margin: 0 0 var(--espacio-3);
-  padding: var(--espacio-2);
+  border-radius: var(--radio-2);
+  margin: 0 0 var(--espacio-4);
+  padding: var(--espacio-3);
 }
 
 legend {
   font-size: var(--tipo-apoyo);
-  font-weight: 600;
+  font-weight: var(--peso-medio);
   padding: 0 var(--espacio-1);
 }
 
+/* Lo inactivo se distingue por color propio: NUNCA apagando con transparencia,
+   que es lo que dejaba el texto por debajo del contraste legible (FR-044). */
 fieldset[disabled] {
-  opacity: 0.6;
+  background: var(--color-fondo);
+  border-color: var(--color-linea);
+}
+
+fieldset[disabled] legend,
+fieldset[disabled] .campo-etiqueta,
+fieldset[disabled] .campo-ayuda {
+  color: var(--color-tinta-tenue);
 }
 
 .opcion {
   display: flex;
   align-items: center;
-  gap: var(--espacio-2);
+  gap: var(--espacio-3);
   min-height: var(--toque);
 }
 
@@ -268,35 +447,49 @@ fieldset[disabled] {
 
 .fila-opciones {
   display: flex;
-  gap: var(--espacio-3);
+  gap: var(--espacio-4);
   flex-wrap: wrap;
 }
 
-/* ---------- Botones ---------- */
+/* ---------- Botones: los seis estados, escritos una sola vez ---------- */
 
 .boton {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--espacio-1);
+  gap: var(--espacio-2);
   min-height: var(--toque);
-  padding: var(--espacio-1) var(--espacio-3);
-  border: 1px solid var(--color-linea);
-  border-radius: var(--radio);
+  padding: var(--espacio-2) var(--espacio-4);
+  border: 1px solid var(--color-borde-control);
+  border-radius: var(--radio-2);
   background: var(--color-papel);
   color: var(--color-tinta);
   font-family: inherit;
   font-size: var(--tipo-base);
-  font-weight: 600;
+  font-weight: var(--peso-medio);
   cursor: pointer;
+  transition: background var(--transicion-rapida), border-color var(--transicion-rapida),
+    color var(--transicion-rapida), transform var(--transicion-rapida);
 }
 
+/* Encima: tiene que apreciarse sin compararlo con una captura previa (SC-019). */
 .boton:hover:not(:disabled) {
-  background: var(--color-fondo);
+  background: var(--color-acento-suave);
+  border-color: var(--color-acento);
+  color: var(--color-acento-pulsado);
+}
+
+/* Pulsado: el botón acusa la pulsación (FR-043). */
+.boton:active:not(:disabled) {
+  background: var(--color-acento-suave);
+  border-color: var(--color-acento-pulsado);
+  transform: translateY(1px);
 }
 
 .boton:disabled {
-  opacity: 0.55;
+  background: var(--color-fondo);
+  border-color: var(--color-linea);
+  color: var(--color-tinta-tenue);
   cursor: not-allowed;
 }
 
@@ -304,26 +497,61 @@ fieldset[disabled] {
   background: var(--color-acento);
   border-color: var(--color-acento);
   color: var(--color-papel);
+  font-weight: var(--peso-fuerte);
 }
 
 .boton-principal:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--color-acento) 85%, black);
+  background: var(--color-acento-pulsado);
+  border-color: var(--color-acento-pulsado);
+  color: var(--color-papel);
+}
+
+.boton-principal:active:not(:disabled) {
+  background: var(--color-acento-pulsado);
+  transform: translateY(1px);
 }
 
 .boton-peligro {
   color: var(--color-error);
-  border-color: color-mix(in srgb, var(--color-error) 30%, var(--color-papel));
+  border-color: var(--color-error);
+}
+
+.boton-peligro:hover:not(:disabled) {
+  background: var(--color-papel);
+  border-color: var(--color-error);
+  color: var(--color-error);
 }
 
 .boton-ancho {
   width: 100%;
 }
 
+/* Ocupado: un solo tratamiento para «esto está en marcha», en todo el producto. */
+.ocupado {
+  cursor: progress;
+}
+
+.ocupado::after {
+  content: '';
+  width: 0.875em;
+  height: 0.875em;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: var(--radio-pastilla);
+  animation: girar 700ms linear infinite;
+}
+
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .grupo-botones {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--espacio-2);
-  margin-bottom: var(--espacio-3);
+  gap: var(--espacio-3);
+  margin-bottom: var(--espacio-4);
 }
 
 /* Lo mismo, pero para agrupar sin separar del bloque siguiente (filas de lista). */
@@ -331,31 +559,29 @@ fieldset[disabled] {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--espacio-2);
+  gap: var(--espacio-3);
 }
 
 /* ---------- Avisos ---------- */
 
 .aviso {
-  border-radius: var(--radio);
-  padding: var(--espacio-2) var(--espacio-3);
-  margin-bottom: var(--espacio-3);
+  border-radius: var(--radio-2);
+  padding: var(--espacio-3) var(--espacio-4);
+  margin-bottom: var(--espacio-4);
   font-size: var(--tipo-apoyo);
-  border: 1px solid color-mix(in srgb, var(--color-atencion) 35%, var(--color-papel));
+  border: 1px solid var(--color-atencion);
   border-left-width: 4px;
-  background: color-mix(in srgb, var(--color-atencion) 8%, var(--color-papel));
+  background: var(--color-papel);
   color: var(--color-tinta);
 }
 
 .aviso-error {
-  border-color: color-mix(in srgb, var(--color-error) 35%, var(--color-papel));
-  background: color-mix(in srgb, var(--color-error) 7%, var(--color-papel));
+  border-color: var(--color-error);
   color: var(--color-error);
 }
 
 .aviso-info {
-  border-color: var(--color-linea);
-  background: var(--color-papel);
+  border-color: var(--color-linea-fuerte);
   color: var(--color-tinta-suave);
 }
 
@@ -363,7 +589,7 @@ fieldset[disabled] {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: var(--espacio-2);
+  gap: var(--espacio-3);
 }
 
 .aviso p {
@@ -387,13 +613,13 @@ fieldset[disabled] {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--espacio-2);
-  padding: var(--espacio-2) 0;
+  gap: var(--espacio-3);
+  padding: var(--espacio-3) 0;
 }
 
 .elemento-lista-principal {
   display: block;
-  font-weight: 600;
+  font-weight: var(--peso-medio);
   color: inherit;
   text-decoration: none;
 }
@@ -402,26 +628,29 @@ fieldset[disabled] {
   display: block;
   color: var(--color-tinta-suave);
   font-size: var(--tipo-apoyo);
-  font-weight: 400;
+  font-weight: var(--peso-normal);
 }
 
 .vacio {
   color: var(--color-tinta-suave);
   font-size: var(--tipo-apoyo);
-  padding: var(--espacio-2) 0;
+  max-width: var(--ancho-texto);
+  padding: var(--espacio-3) 0;
 }
 
 /* ---------- Etiqueta de situación ----------
    Cada situación lleva SIEMPRE su palabra escrita y un contorno distinto, para
-   distinguirse también en blanco y negro o sin percibir el color (FR-016). */
+   distinguirse también en blanco y negro o sin percibir el color (FR-016).
+   Vigente pasa del acento al oliva: el acento ya solo significa «acción». */
 
 .etiqueta {
   display: inline-block;
   font-size: var(--tipo-apoyo);
-  font-weight: 600;
-  line-height: 1.4;
-  padding: 0 var(--espacio-2);
-  border-radius: 999px;
+  font-weight: var(--peso-medio);
+  line-height: var(--linea-normal);
+  /* Aire por encima y por debajo: en la v1.1 era cero y parecía aplastada. */
+  padding: var(--espacio-2) var(--espacio-3);
+  border-radius: var(--radio-pastilla);
   white-space: nowrap;
 }
 
@@ -432,39 +661,48 @@ fieldset[disabled] {
 }
 
 .etiqueta-vigente {
-  color: var(--color-acento);
-  border: 1px solid color-mix(in srgb, var(--color-acento) 40%, var(--color-papel));
-  background: color-mix(in srgb, var(--color-acento) 10%, var(--color-papel));
+  color: var(--color-oliva);
+  border: 1px solid var(--color-oliva);
+  background: color-mix(in srgb, var(--color-oliva) 8%, var(--color-papel));
 }
 
 .etiqueta-caducado {
   color: var(--color-atencion);
-  border: 1px solid color-mix(in srgb, var(--color-atencion) 45%, var(--color-papel));
-  background: color-mix(in srgb, var(--color-atencion) 12%, var(--color-papel));
+  border: 1px solid var(--color-atencion);
+  background: color-mix(in srgb, var(--color-atencion) 10%, var(--color-papel));
 }
 
 /* ---------- Inicio ---------- */
 
+/* Son CINCO cifras, y ese número manda: una rejilla de «las que quepan» las
+   reparte en 4+1 o 2+2+1 y deja una fila huérfana (FR-049). Los únicos repartos
+   que no dejan una cifra sola son 1, 3 y 5 columnas, y son los tres que se usan:
+   una por fila en móvil (compacta), tres en escritorio y cinco en ancho. */
 .resumen-actividad {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
-  gap: var(--espacio-2);
-  margin-bottom: var(--espacio-3);
+  grid-template-columns: 1fr;
+  gap: var(--espacio-3);
+  margin-bottom: var(--espacio-5);
 }
 
 .dato {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--espacio-3);
   border: 1px solid var(--color-linea);
-  border-radius: var(--radio);
-  padding: var(--espacio-2);
+  border-radius: var(--radio-2);
+  padding: var(--espacio-3) var(--espacio-4);
   background: var(--color-papel);
 }
 
 .dato-cifra {
   display: block;
   font-size: var(--tipo-total);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  line-height: 1.2;
+  font-weight: var(--peso-fuerte);
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: var(--letra-cifra);
+  line-height: var(--linea-apretada);
 }
 
 .dato-rotulo {
@@ -475,33 +713,48 @@ fieldset[disabled] {
 
 .accesos {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-  gap: var(--espacio-2);
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: var(--espacio-3);
 }
 
 .acceso {
   display: block;
   min-height: var(--toque);
-  padding: var(--espacio-2);
+  padding: var(--espacio-4);
   border: 1px solid var(--color-linea);
-  border-radius: var(--radio);
+  border-radius: var(--radio-2);
   background: var(--color-papel);
   color: var(--color-tinta);
   text-decoration: none;
+  transition: border-color var(--transicion-rapida), box-shadow var(--transicion-rapida),
+    transform var(--transicion-rapida);
 }
 
 .acceso:hover {
   border-color: var(--color-acento);
+  box-shadow: var(--sombra-2);
+  color: var(--color-tinta);
+}
+
+.acceso:active {
+  transform: translateY(1px);
+  border-color: var(--color-acento-pulsado);
 }
 
 .acceso strong {
   display: block;
   color: var(--color-acento);
+  font-weight: var(--peso-fuerte);
 }
 
 .acceso span {
   color: var(--color-tinta-suave);
   font-size: var(--tipo-apoyo);
+}
+
+/* En escritorio ancho, el resumen y los accesos dejan de ser una pila. */
+.rejilla-ancha {
+  display: block;
 }
 
 /* ---------- Tabla de líneas: tarjetas apiladas en móvil ---------- */
@@ -518,15 +771,15 @@ fieldset[disabled] {
 .tabla-lineas tr {
   display: block;
   border: 1px solid var(--color-linea);
-  border-radius: var(--radio);
-  padding: var(--espacio-2);
-  margin-bottom: var(--espacio-2);
+  border-radius: var(--radio-2);
+  padding: var(--espacio-3);
+  margin-bottom: var(--espacio-3);
   background: var(--color-papel);
 }
 
 .tabla-lineas td {
   display: block;
-  padding: 0 0 var(--espacio-2);
+  padding: 0 0 var(--espacio-3);
   border: 0;
 }
 
@@ -535,7 +788,8 @@ fieldset[disabled] {
   content: attr(data-etiqueta);
   display: block;
   font-size: var(--tipo-apoyo);
-  font-weight: 600;
+  font-weight: var(--peso-medio);
+  color: var(--color-tinta-suave);
   margin-bottom: var(--espacio-1);
 }
 
@@ -548,18 +802,68 @@ fieldset[disabled] {
 }
 
 .importe-linea {
-  font-variant-numeric: tabular-nums;
-  font-weight: 600;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-weight: var(--peso-fuerte);
 }
 
 .origen-linea {
   display: inline-block;
   font-size: var(--tipo-apoyo);
   color: var(--color-tinta-suave);
-  border: 1px solid var(--color-linea);
-  border-radius: 999px;
-  padding: 0 var(--espacio-2);
+  border: 1px solid var(--color-linea-fuerte);
+  border-radius: var(--radio-pastilla);
+  padding: 0 var(--espacio-3);
   margin-top: var(--espacio-1);
+}
+
+/* ---------- Exportar la copia (.zip) ---------- */
+
+/* El botón y lo que cuenta al terminar, agrupados: el mismo bloque en las dos
+   pantallas donde vive (FR-001 de la spec 003). */
+.exportacion {
+  margin-bottom: var(--espacio-4);
+}
+
+.exportacion .aviso {
+  margin-top: var(--espacio-3);
+}
+
+/* Cabecera de sección con su acción a la derecha, sin que el botón empuje al título. */
+.cabecera-seccion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-3);
+}
+
+.cabecera-seccion h2 {
+  margin: 0;
+}
+
+.progreso {
+  margin-top: var(--espacio-3);
+}
+
+.progreso-texto {
+  margin: 0 0 var(--espacio-1);
+  font-size: var(--tipo-apoyo);
+  color: var(--color-tinta-suave);
+}
+
+.progreso-barra {
+  height: var(--espacio-3);
+  background: var(--color-fondo);
+  border: 1px solid var(--color-linea-fuerte);
+  border-radius: var(--radio-pastilla);
+  overflow: hidden;
+}
+
+/* La anchura la pone el componente: es el único dato que cambia con el avance. */
+.progreso-avance {
+  height: 100%;
+  background: var(--color-acento);
+  transition: width var(--transicion);
 }
 
 /* ---------- Resumen de totales ---------- */
@@ -567,31 +871,33 @@ fieldset[disabled] {
 .resumen {
   background: var(--color-papel);
   border: 1px solid var(--color-linea);
-  border-radius: var(--radio);
-  padding: var(--espacio-2) var(--espacio-3);
+  border-radius: var(--radio-3);
+  padding: var(--espacio-4) var(--espacio-5);
 }
 
 .resumen-fila {
   display: flex;
   justify-content: space-between;
-  gap: var(--espacio-3);
-  padding: var(--espacio-1) 0;
+  gap: var(--espacio-4);
+  padding: var(--espacio-2) 0;
   font-size: var(--tipo-apoyo);
   color: var(--color-tinta-suave);
 }
 
 .resumen-fila span:last-child {
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums lining-nums;
   color: var(--color-tinta);
 }
 
 /* El dato que el freelancer busca: manda sobre todo lo demás (FR-011). */
 .resumen-total {
-  border-top: 2px solid var(--color-tinta);
-  margin-top: var(--espacio-1);
-  padding-top: var(--espacio-2);
+  border-top: 2px solid var(--color-linea-fuerte);
+  margin-top: var(--espacio-2);
+  padding-top: var(--espacio-3);
   font-size: var(--tipo-total);
-  font-weight: 700;
+  font-weight: var(--peso-fuerte);
+  letter-spacing: var(--letra-cifra);
+  line-height: var(--linea-apretada);
   color: var(--color-tinta);
 }
 
@@ -600,9 +906,9 @@ fieldset[disabled] {
   position: sticky;
   bottom: 0;
   z-index: 10;
-  box-shadow: 0 -2px 10px rgba(27, 36, 48, 0.12);
-  margin: var(--espacio-3) calc(-1 * var(--espacio-3)) 0;
-  border-radius: var(--radio) var(--radio) 0 0;
+  box-shadow: var(--sombra-3);
+  margin: var(--espacio-4) calc(-1 * var(--espacio-4)) 0;
+  border-radius: var(--radio-3) var(--radio-3) 0 0;
 }
 
 /* ---------- Logo ---------- */
@@ -611,30 +917,45 @@ fieldset[disabled] {
   max-width: 200px;
   max-height: 90px;
   border: 1px solid var(--color-linea);
-  border-radius: var(--radio);
+  border-radius: var(--radio-1);
   background: var(--color-papel);
-  padding: var(--espacio-2);
+  padding: var(--espacio-3);
 }
 
-/* ---------- Escritorio ---------- */
+/* ============================================================================
+   Punto de ruptura 1 de 2: móvil → escritorio.
+   ============================================================================ */
 
 @media (min-width: 40rem) {
+  /* Anclada solo a partir de aquí: ver el comentario de .cabecera. */
+  .cabecera {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+
   .contenido {
-    padding: var(--espacio-4) var(--espacio-4) var(--espacio-5);
+    padding: var(--espacio-5) var(--espacio-5) var(--espacio-7);
   }
 
   .tarjeta {
-    padding: var(--espacio-4);
+    padding: var(--espacio-5);
   }
 
-  h1 {
-    font-size: 1.75rem;
+  /* Tres columnas: 3 + 2, ninguna cifra se queda sola (FR-049). */
+  .resumen-actividad {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .dato {
+    display: block;
+    padding: var(--espacio-4);
   }
 
   .rejilla-doble {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 0 var(--espacio-3);
+    gap: 0 var(--espacio-4);
   }
 
   .tabla-lineas thead {
@@ -653,15 +974,16 @@ fieldset[disabled] {
 
   .tabla-lineas th {
     text-align: left;
-    padding: var(--espacio-1) var(--espacio-2) var(--espacio-1) 0;
-    border-bottom: 1px solid var(--color-tinta);
+    padding: var(--espacio-2) var(--espacio-3) var(--espacio-2) 0;
+    border-bottom: 2px solid var(--color-linea-fuerte);
     color: var(--color-tinta-suave);
     font-size: var(--tipo-apoyo);
+    font-weight: var(--peso-medio);
   }
 
   .tabla-lineas td {
     display: table-cell;
-    padding: var(--espacio-2) var(--espacio-2) var(--espacio-2) 0;
+    padding: var(--espacio-3) var(--espacio-3) var(--espacio-3) 0;
     vertical-align: top;
   }
 
@@ -688,13 +1010,49 @@ fieldset[disabled] {
 
   .resumen-fijo {
     position: static;
-    box-shadow: var(--sombra);
-    margin: var(--espacio-3) 0 0 auto;
-    border-radius: var(--radio);
-    max-width: 24rem;
+    box-shadow: var(--sombra-2);
+    margin: var(--espacio-5) 0 0 auto;
+    border-radius: var(--radio-3);
+    max-width: 26rem;
   }
 
   .boton-ancho {
     width: auto;
+  }
+}
+
+/* ============================================================================
+   Punto de ruptura 2 de 2: escritorio ancho.
+   Reparte lo que era una pila; no aparece ningún elemento nuevo (FR-047).
+   ============================================================================ */
+
+@media (min-width: 64rem) {
+  .contenido {
+    padding: var(--espacio-6) var(--espacio-6) var(--espacio-7);
+  }
+
+  /* Cinco columnas: las cinco cifras en una sola fila (FR-049). */
+  .resumen-actividad {
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  /* El resumen de actividad y los accesos, uno al lado del otro. */
+  .rejilla-ancha {
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    gap: var(--espacio-5);
+    align-items: start;
+  }
+
+  .rejilla-ancha > .tarjeta {
+    margin-bottom: 0;
+  }
+
+  /* El desglose acompaña a las líneas mientras se editan, en vez de quedarse
+     al final de un recorrido largo. */
+  .resumen-fijo {
+    position: sticky;
+    top: calc(var(--toque) + var(--espacio-6));
+    bottom: auto;
   }
 }

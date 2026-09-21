@@ -1,135 +1,205 @@
-# Research: Pantalla de inicio e imagen profesional (PresupuestosPro v1.1)
+# Research: Pantalla de inicio e imagen «Mediterráneo» (PresupuestosPro v1.1 → v1.3)
 
 **Fecha**: 2026-09-19
-**Spec**: [spec.md](./spec.md)
+**Spec**: [spec.md](./spec.md) · **Propuesta de origen**: [direccion-visual-mediterranea.md](../propuestas/direccion-visual-mediterranea.md)
 **Constitución aplicada**: [.specify/memory/constitution.md](../../.specify/memory/constitution.md)
 
 ## Punto de partida
 
-Aquí no hay que elegir stack: lo fija la [spec 001](../001-presupuestos-freelancer/plan.md) y no se toca. Lo que hay que decidir es más estrecho y más delicado: **cómo mejorar la cara del producto sin rozar su motor**. Tres restricciones mandan:
+Aquí no hay que elegir stack: lo fija la [spec 001](../001-presupuestos-freelancer/plan.md) y no se toca. Las decisiones de la v1.1 que **siguen en pie sin discusión** son tres, y se repiten aquí para que nadie las reabra:
 
-1. El encargo dice que la lógica, los cálculos y el esquema de datos **no cambian en absoluto**.
-2. La constitución exige la solución más simple (Principio I) y prohíbe construir lo que la spec no pide (Principio III).
-3. La misma imagen tiene que llegar a dos sitios que funcionan de forma muy distinta: **una pantalla (HTML y CSS)** y **un PDF (dibujado punto por punto)**.
+- **Los tokens visuales viven en un único bloque del CSS y el generador del PDF los lee de ahí** (Decisión 1 de la v1.1). Es lo que hace que «definido en un único lugar» sea literal y no una promesa. Esta revisión la **amplía**: ahora hay que leer también tamaños, no solo colores.
+- **La situación de un presupuesto se deduce, nunca se guarda ni se pregunta** (Decisión 4 de la v1.1). Intacta: FR-017, FR-017a y FR-017b no cambian y sus pruebas siguen valiendo.
+- **El inicio es la entrada y la navegación común se completa, no se reinventa** (Decisiones 5 y 6 de la v1.1). Intactas. Lo único que se les añade es que la barra siga visible al desplazarse (FR-050).
 
-La tercera es el verdadero problema de diseño de esta versión.
+Lo que esta revisión tiene que decidir es más estrecho: **cómo llevar una dirección visual con carácter a una pantalla y a un PDF que se dibuja punto por punto, sin añadir dependencias, sin tocar un céntimo y sin romper lo que ya funciona**. Once decisiones.
 
 ---
 
-## Decisión 1 — Los tokens visuales viven en el CSS, y el PDF los lee de ahí
+## Decisión 1 — Las tipografías viajan dentro del producto, no se piden a un tercero
 
-**Decisión**: el color, la tipografía y la escala de espaciado se definen **una sola vez**, como variables CSS al principio de `global.css`. Cuando el freelancer pulsa "Descargar PDF", el generador **consulta esos mismos valores** al navegador y los traduce a lo que jsPDF entiende.
+**Decisión**: los archivos de tipografía se guardan en el repositorio y se sirven desde el propio alojamiento, junto al resto de `dist/`. **Ninguna petición a Google Fonts ni a ningún CDN.** El respaldo declarado es la tipografía del sistema, así que si un archivo no llega, la aplicación sigue legible.
 
-**Qué significa para el negocio**: la paleta deja de estar repartida. Cambiar el azul de la marca es tocar **una línea**, y ese cambio aparece a la vez en las seis pantallas y en el documento que recibe el cliente. No existe el escenario de "la aplicación ya es azul nuevo pero los PDF salen con el azul viejo", que es exactamente como se deteriora la imagen de una herramienta con el tiempo.
+**Qué significa para el negocio**: la dirección del freelancer nunca viaja a un servidor ajeno para conseguir una letra (Principio V), la aplicación sigue funcionando sin conexión después de la primera carga (SC-028) y no hay un tercero que pueda caerse y dejar el producto feo.
 
-**Por qué**: FR-008 pide "definidas en un único lugar". Las alternativas dejan siempre **dos** lugares:
+**Por qué no `@fontsource` ni un paquete de npm**: sería **una dependencia nueva** contra una lista cerrada, y solo para copiar dos archivos binarios a `dist/`. Los archivos se copian sin intermediario. **No se añade ningún paquete**, así que la lista cerrada de dependencias de la constitución no se toca.
 
-| Alternativa | Por qué se descarta |
+**Consecuencia que hay que asumir y documentar**: distribuir una tipografía obliga a **incluir su licencia** en el producto. Las dos elegidas son de licencia abierta (SIL Open Font License), y el archivo de licencia viaja con ellas. Es un requisito legal, no un detalle: sin él, publicar `dist/` incumple la licencia de la fuente.
+
+---
+
+## Decisión 2 — Dos archivos, no cuatro: se usan fuentes variables
+
+**Decisión**: **dos archivos**, en formato `woff2` y con el juego de caracteres latino:
+
+| Archivo | Para qué |
 |---|---|
-| Escribir la paleta en el CSS y repetirla en el código del PDF | Son dos sitios. Funciona el primer día y se desincroniza el segundo; es justo lo que FR-008 quiere evitar |
-| Definirla en código y generar el CSS desde ahí al arrancar | También funciona, pero los colores dejan de verse en la hoja de estilos y la página parpadea sin color hasta que arranca el programa |
-| Un paso de compilación que genere ambos desde un archivo común | Infraestructura nueva para cuatro colores. El Principio I decide |
+| Familia de lectura, **variable** (un solo archivo cubre los tres grosores: 400, 500 y 700) | Cuerpo, campos, rótulos, importes |
+| Familia de titulares, **un solo grosor fuerte** | Título de pantalla y marca |
 
-**Cautela de implementación**: el PDF solo se genera desde el navegador con la aplicación ya cargada, así que los valores siempre están disponibles. Aun así, la función de lectura lleva un valor de respaldo: **si un token no se pudiera leer, el PDF sale igualmente** con el color por defecto, porque un documento sin generar es un fallo mucho peor que un documento con un gris ligeramente distinto.
+**Qué significa para el negocio**: el tope que fijó la spec era de cuatro archivos (D3); se entregan **dos**. Un archivo variable pesa parecido a un grosor estático y da los tres, así que se ahorran dos descargas y el producto arranca antes.
 
----
+**Por qué no la familia de titulares también variable**: sus ejes de variación (anchura y tamaño óptico) engordan el archivo sin que esta dirección los use: se necesita **un** grosor fuerte y nada más. La versión estática es más pequeña.
 
-## Decisión 2 — La aplicación adopta la familia tipográfica que el PDF puede usar, y no al revés
-
-**Decisión**: tanto la pantalla como el PDF usan una **sans-serif neutra de métricas Helvetica/Arial**, que es la que los PDF llevan de serie. La aplicación deja de pedir "la tipografía del sistema" (que en un Windows es una y en un Mac es otra) y pide explícitamente esa familia.
-
-**Qué significa para el negocio**: la aplicación y el documento se reconocen como el mismo producto, que es lo que pide SC-006, y el freelancer ve en pantalla algo muy parecido a lo que va a recibir su cliente.
-
-**Por qué en esa dirección**: la única forma de meter una tipografía distinta en un PDF es **incrustarla dentro del archivo**, lo que engorda cada documento en cientos de kilobytes y obliga a descargar la fuente en la aplicación. Se descarta por el Principio I y porque la 001 ya decidió no incrustar fuentes. Como el PDF no puede ceder, cede la pantalla: no se pierde nada, porque Helvetica y Arial son tipografías sobrias y perfectamente legibles, que es justo el tono que pide el encargo.
-
-**Alternativa descartada**: una fuente web de marca (Inter, Source Sans y compañía). Añade una descarga externa —que además filtra la dirección del freelancer a un tercero, en contra del espíritu del Principio V—, retrasa la primera pantalla y deja el PDF descolgado de todos modos.
+**Cómo se evita el salto de maquetación** (el caso raro de la spec: «las letras no llegan a cargarse»): la familia de lectura se **precarga** en la página, y se declara con intercambio inmediato de respaldo. Como el archivo viaja en el mismo alojamiento, la ventana en la que se ve la letra del sistema es de milisegundos; y si nunca llega, todo sigue legible con el respaldo.
 
 ---
 
-## Decisión 3 — Una paleta de cuatro tonos, no de cuatro colores sueltos
+## Decisión 3 — El PDF no incrusta tipografías; el parecido se consigue con color, aire y jerarquía
 
-**Decisión**: la paleta se construye con **un tono neutro en varias intensidades** (texto, texto secundario, líneas, fondo) más **tres tonos con significado**: acento, atención y error. Nada más.
+**Decisión**: el documento mantiene la familia de métricas Helvetica/Arial que el PDF lleva de serie. Lo que adopta de la dirección nueva es la **paleta**, la **escala de espaciado** y la **jerarquía** (FR-019, FR-052).
 
-**Qué significa para el negocio**: se cumple lo que pide SC-006 —una persona que recorra la aplicación cuenta unos pocos colores— y el resultado es sobrio por construcción: el color deja de ser decoración y pasa a significar algo. El acento marca lo que hay que pulsar, el de atención avisa y el de error corrige.
+**Qué significa para el negocio**: el cliente recibe un documento con la cara nueva sin que cada descarga engorde. Una tipografía incrustada se repite **en cada PDF**, así que en la exportación en lote el coste se multiplica por el número de presupuestos — exactamente la trampa que ya documenta `CLAUDE.md` para el logo.
 
-**Por qué**: es lo que separa una herramienta que parece seria de una que parece un borrador. Una escala de un mismo tono neutro da profundidad (jerarquía entre título, dato y ayuda) sin sumar colores a la cuenta.
+**Consecuencia asumida y escrita en la spec**: la aplicación y el PDF se reconocen como el mismo producto por su color, su aire y su jerarquía, **no** por la forma exacta de la letra (D1 de las Clarifications).
 
-**Cómo se reparte en las situaciones del presupuesto**: Vigente usa el acento, Caducado usa el de atención y Borrador se queda en el neutro. No hace falta un cuarto color, y encaja con la lectura: un borrador todavía no es nada, por eso es gris.
-
----
-
-## Decisión 4 — La situación se deduce; nunca se guarda ni se pregunta
-
-**Decisión**: Borrador, Vigente y Caducado se calculan en el momento a partir de las líneas, el nombre del cliente y la fecha de validez que el presupuesto ya tiene. Ese cálculo vive en el módulo de dominio, junto al resto de reglas, y **lleva pruebas automáticas**.
-
-**Qué significa para el negocio**: es lo que permite cumplir a la vez las dos cosas que pediste —ver la situación de cada presupuesto y no tocar los datos—. Ningún presupuesto existente se altera, no hay migración y el freelancer no tiene que ir marcando nada a mano.
-
-**Por qué con pruebas, si la 001 dijo "pruebas solo donde está el dinero"**: porque no es pintar, es una regla con bordes afilados, y dos de ellos ya están escritos como criterios de aceptación: **el propio día de la validez todavía cuenta como vigente** (equivocarse ahí caduca presupuestos un día antes de tiempo) y **Borrador manda sobre Caducado**. Son exactamente el tipo de error que nadie ve al mirar la pantalla y que estropea el recuento del inicio. Encaja en la regla de la 001: es lógica pura de dominio, sin React ni navegador.
-
-**Detalle que evita un error clásico**: las fechas se comparan como texto `AAAA-MM-DD`, tal y como ya se guardan. Ordenadas alfabéticamente coinciden con el orden cronológico, así que no hace falta construir fechas ni pelearse con zonas horarias para saber si algo caducó.
+**Alternativa descartada**: incrustar un subconjunto de la familia de lectura. Se descarta por peso por documento y por FR-053; merece su propia spec con un presupuesto medido.
 
 ---
 
-## Decisión 5 — El inicio entra como pantalla nueva y la lista se queda donde estaba, pero con otra dirección
+## Decisión 4 — El documento tiene su propia conversión de la escala: 1 rem = 9 pt
 
-**Decisión**: la aplicación pasa a abrir en Inicio; la lista de presupuestos se mueve a su propia dirección y conserva todo lo que hacía.
+**Decisión**: los tamaños del PDF dejan de estar escritos a mano y se derivan de la escala tipográfica del sistema con **una conversión declarada: 1 rem = 9 pt**.
 
-**Qué significa para el negocio**: el freelancer que entra ve primero el estado de su actividad y decide, en vez de aterrizar en una lista sin contexto. Y desde el inicio se puede crear un presupuesto directamente, así que el camino corto —el de "son las once de la noche"— no se alarga ni un paso (SC-009).
+| Nivel del sistema | En pantalla | En el documento |
+|---|---|---|
+| Apoyo | 0,875 rem | 7,9 pt |
+| Texto y campos | 1 rem | 9 pt |
+| Título de bloque | 1,25 rem | 11,25 pt |
+| Título de pantalla | 1,75 rem | 15,75 pt |
+| Total a pagar | 2 rem | **18 pt** |
 
-**Por qué no un aviso o un panel dentro de la propia lista**: mezclaría dos cosas distintas en una pantalla que en móvil ya va justa, y dejaría la aplicación sin un sitio neutro al que volver. Además, el encargo pide explícitamente una página de inicio.
+**Qué significa para el negocio**: el total pasa a ser el elemento mayor del documento (14 pt hoy → 18 pt), y el número del presupuesto baja de 24 pt a 15,75 pt, donde le corresponde. La densidad del documento **no cambia**: el texto de la tabla se queda en los 9 pt de siempre.
 
-**Consecuencia asumida**: quien tuviera guardada en favoritos la dirección de la aplicación ahora aterriza en el inicio, no en la lista. No se pierde nada y es la intención del cambio.
+**Por qué 9 pt y no la conversión directa** (1 rem = 16 px = 12 pt): con 12 pt de texto base, la tabla de líneas crecería un 33 %, un presupuesto largo ocuparía más páginas y el archivo pesaría más — poniendo en riesgo FR-053 y la exportación en lote. La conversión es una **decisión de producto declarada**, no un descuido: el documento es más denso que una pantalla, y siempre lo fue.
 
----
-
-## Decisión 6 — La navegación común se completa, no se reinventa
-
-**Decisión**: se reutiliza la barra de secciones que ya existe, añadiéndole Inicio y una marca visible de en qué sección está el freelancer. En móvil, si los cinco accesos no caben en una línea, **pasan a la siguiente**.
-
-**Qué significa para el negocio**: se cumple lo de moverse entre secciones sin recurrir al botón "atrás" (FR-005) sin rehacer nada de lo que ya funciona.
-
-**Por qué no un menú desplegable ni una barra inferior**: un menú escondería los accesos detrás de un toque extra, y FR-005 pide que estén **visibles**; una barra inferior fija es más de lo que pide el encargo y come pantalla en el móvil, justo donde se editan las líneas. Que los accesos salten de línea es feo de imaginar y cómodo de usar: siguen todos a la vista y a un solo toque.
+**Lo que esto arregla de fondo**: hoy el generador tiene catorce tamaños escritos a mano (8, 9, 9.5, 10, 12, 14, 24…). Después, todos salen de la escala, igual que ya salían los colores. Es la mitad de FR-051.
 
 ---
 
-## Decisión 7 — El PDF cambia de maquetación, no de contenido
+## Decisión 5 — Los tokens se mantienen legibles por máquina: la fluidez vive en la regla, no en el valor
 
-**Decisión**: se rediseña el reparto del espacio —una banda de cabecera con el acento, más aire entre bloques, una tabla más ligera y un total claramente destacado—, manteniendo **exactamente** los bloques, el orden y los textos que fija el [contrato de la 001](../001-presupuestos-freelancer/contracts/pdf-documento.md).
+**Decisión**: el título de pantalla es fluido —28 px en móvil, hasta 36 px en escritorio— pero **la expresión que lo hace fluido está en la regla del título, no dentro del token**. Los dos extremos son dos tokens de valor plano.
 
-**Qué significa para el negocio**: el cliente final recibe un documento que transmite más oficio, pero que dice lo mismo, al céntimo. Un presupuesto ya enviado puede volver a descargarse y seguirá cuadrando con el que recibió el cliente.
+**Por qué es importante y no un detalle de estilo**: el generador del PDF lee los tokens preguntándoselos al navegador, y lo que recibe es **el texto tal y como está escrito**, no un valor resuelto. Si el token fuese la expresión fluida, el PDF recibiría una fórmula que no sabe interpretar y caería a su valor de respaldo sin avisar: un documento con tamaños silenciosamente equivocados. Con los dos extremos como valores planos, el PDF lee el que le corresponde y la pantalla compone la fluidez a partir de ellos.
 
-**Lo que NO entra en el PDF**: la situación del presupuesto. Borrador, Vigente o Caducado son información **para el freelancer**, no para su cliente; sacar "Borrador" impreso en un presupuesto enviado sería un disparo en el pie. El contrato de la 001 no la incluye y FR-020 prohíbe cambiar el contenido.
-
-**Lo que hay que respetar sí o sí al mover cosas de sitio**: la tabla sigue repitiendo su cabecera al cambiar de página y el bloque de totales sigue sin partirse (FR-022). Son las dos cosas que una maquetación nueva rompe con más facilidad.
+**Regla general que queda escrita en el contrato**: **todo token que el PDF necesite leer es un valor plano.** Las expresiones calculadas (fluidez, mezclas de color) se permiten en las reglas que las usan, nunca en el valor del token.
 
 ---
 
-## Decisión 8 — Cómo se demuestra que no se ha roto nada
+## Decisión 6 — Los tonos derivados que el PDF necesita pasan a ser tokens propios; los demás siguen calculados
 
-**Decisión**: la garantía descansa en tres patas, sin montar infraestructura de pruebas nueva:
+**Decisión**: los rellenos teñidos y las líneas intermedias que hoy se calculan mezclando colores dentro de las reglas pasan a ser **tokens con su propio valor** cuando el PDF los necesita —el relleno del desglose y la línea que estructura la tabla—, y siguen calculados cuando solo viven en pantalla —el relleno de las etiquetas de situación—.
 
-1. **Los módulos de dominio no se tocan.** Pantalla y PDF siguen pidiendo los importes al mismo sitio de siempre, así que sus pruebas siguen cubriendo el dinero.
-2. **El acceso a los datos no se toca.** Ni una clave, ni un campo: lo guardado se sigue leyendo igual.
-3. **Una comparación de "antes y después"** que hace una persona: mismo presupuesto, PDF viejo y PDF nuevo uno al lado del otro. Está en [quickstart.md](./quickstart.md).
+**Por qué no convertirlo todo en token**: multiplicaría la paleta por dos sin que nadie tome una decisión nueva; una mezcla derivada de un token no es un color suelto, es ese mismo token más suave. La frontera la marca quién tiene que leerlo: **si lo lee el PDF, es un token plano; si solo lo pinta el navegador, puede seguir siendo una mezcla.**
 
-**Por qué no pruebas automáticas del PDF o de la interfaz**: exigirían montar un navegador simulado o comparar imágenes, que es la infraestructura que la 001 descartó por el Principio I y que el Principio IV declara innecesaria —lo que se puede comprobar mirando el documento, se comprueba mirando el documento—.
+**Lo que esto arregla**: hoy hay ocho mezclas escritas dentro de las reglas y el PDF no puede ver ninguna. Por eso el desglose del documento no puede compartir el relleno con la pantalla.
 
 ---
+
+## Decisión 7 — Dos hallazgos de contraste que corrigen la paleta de la propuesta
+
+Al comprobar la paleta contra el mínimo que exige FR-037 aparecieron dos valores que no llegaban. **Se corrigen aquí y se corrige la tabla de la spec**, en lugar de descubrirlo en la verificación manual:
+
+| Valor propuesto | Problema | Valor que se adopta |
+|---|---|---|
+| Tinta tenue `#A3958C` para el texto inactivo | **2,9:1** sobre papel. Ni siquiera llega al 3:1 de los elementos de interfaz, así que un botón desactivado sería ilegible | **`#8D7D74`** — 3,9:1. Sigue leyéndose como «inactivo» porque queda claramente por detrás del texto secundario (5,2:1), pero se lee |
+| Línea `#F0E2D8` como borde de los campos | **1,27:1**. Como borde decorativo entre filas es perfecto; como **única señal de que ahí hay un campo donde escribir** incumple el mínimo de 3:1 | Se añade **borde de control `#A08A7C`** — 3,3:1, solo para el contorno de campos, desplegables y botones secundarios |
+
+**Regla que se deriva**: hay **tres** tokens de línea con trabajos distintos —separación decorativa entre filas, separación que estructura (cabecera de tabla y regla del total) y contorno de un control donde se puede escribir o pulsar—. Confundirlos es lo que deja un formulario sin contraste.
+
+**Nota sobre el texto inactivo**: las pautas de accesibilidad eximen a los controles desactivados del mínimo de 4,5:1, y esta revisión se acoge a esa excepción de forma explícita, pero **no** por debajo de 3:1. FR-044 pide que el texto de un elemento inactivo se siga leyendo, y 2,9:1 no lo cumplía.
+
+---
+
+## Decisión 8 — La escala de espaciado se cambia en dos pasos, y el primero no se ve
+
+**Decisión**: FR-041 se cumple partiendo el cambio en dos, en este orden:
+
+**Paso 1 — renombrar, sin tocar nada de lo que se ve.** Cada peldaño actual pasa a su nombre nuevo conservando su valor, y se declaran los dos peldaños que aún no se usan:
+
+| Hoy | Valor | Pasa a llamarse | Valor tras el paso 1 |
+|---|---|---|---|
+| `--espacio-1` | 0,25 rem | `--espacio-1` | 0,25 rem (igual) |
+| — | — | `--espacio-2` | 0,5 rem (**nuevo, todavía sin usar**) |
+| `--espacio-2` | 0,75 rem | `--espacio-3` | 0,75 rem |
+| `--espacio-3` | 1 rem | `--espacio-4` | 1 rem |
+| `--espacio-4` | 1,5 rem | `--espacio-5` | 1,5 rem |
+| `--espacio-5` | 2,5 rem | `--espacio-6` | **2,5 rem de momento** |
+| — | — | `--espacio-7` | 3 rem (**nuevo, todavía sin usar**) |
+
+Al terminar el paso 1, la aplicación se ve **exactamente igual que antes**. Es lo que lo hace verificable: si algo se movió, hay un error de renombrado.
+
+**Paso 2 — ajustar valores y repartir los peldaños nuevos.** `--espacio-6` pasa a 2 rem, el aire entre secciones pasa a `--espacio-7`, y los huecos pequeños que hoy usan 4 px pasan a los 8 px de `--espacio-2`. Cada movimiento es una decisión visible y revisable.
+
+**Por qué no de golpe**: cambiar nombre y valor a la vez significa que **ninguna diferencia es atribuible**. Con más de cien usos en la hoja de estilos, un error de renombrado quedaría escondido detrás de un cambio de diseño y se descubriría en producción.
+
+---
+
+## Decisión 9 — Los estados se resuelven una vez, en un sitio, para todos los controles
+
+**Decisión**: los seis estados de FR-043 se escriben **una vez** sobre las clases base que ya existen (botón, enlace de navegación, acceso, campo), no control a control. El estado inactivo deja de apagarse con transparencia y pasa a tener fondo, borde y color de texto propios.
+
+**Qué significa para el negocio**: hoy el mismo concepto está resuelto de dos maneras distintas —dos valores de transparencia diferentes para «desactivado»— y ninguna de las dos se lee bien. Después habrá un solo tratamiento, aplicado en todas partes, y el freelancer sabrá siempre qué puede pulsar.
+
+**Por qué no un componente nuevo que envuelva a los controles**: el producto ya tiene sus componentes y el Principio I manda; el problema no es de estructura, es que las reglas de estado no estaban escritas. Se escriben.
+
+**El movimiento se apaga entero cuando el sistema lo pide**: una sola regla global anula transiciones y animaciones cuando el freelancer tiene activado «reducir movimiento», y los estados siguen siendo perceptibles porque se distinguen por color y posición, no por la animación (FR-046).
+
+---
+
+## Decisión 10 — La barra de secciones se queda pegada arriba, y eso obliga a mantenerla baja
+
+**Decisión**: la navegación común se ancla a la parte superior y sigue visible al desplazarse (FR-050).
+
+**La consecuencia que hay que vigilar**: en un móvil, el total a pagar ya está anclado abajo mientras se editan las líneas. Con la barra anclada arriba, el alto útil se reduce por los dos lados. Por eso la barra **tiene que caber en una línea** en móvil y quedarse en unos 56 px: si los cinco accesos saltan a dos líneas y encima se queda pegada, se come la pantalla justo donde se trabaja.
+
+**Cómo se resuelve sin esconder nada**: los cinco accesos siguen visibles y en una sola línea en móvil gracias al peldaño de 8 px y a un relleno lateral más ajustado en esa anchura; lo que no se toca es la zona pulsable de 44 px. Si en la verificación manual no cupieran, la salida **no** es un menú desplegable —FR-005 lo prohíbe— sino dejar de anclar la barra en móvil y mantenerla anclada solo en escritorio.
+
+---
+
+## Decisión 11 — El tercer punto de ruptura reparte, no añade pantallas
+
+**Decisión**: se añade un segundo punto de ruptura en escritorio ancho. Lo que hace es **repartir en dos columnas** lo que hoy es una pila de tarjetas (el resumen de actividad junto a los accesos en el inicio; el desglose junto a la tabla en el editor) y limitar el ancho de los párrafos largos. No aparece ninguna pantalla nueva ni ningún elemento que no exista hoy.
+
+**Qué significa para el negocio**: el freelancer que trabaja en un monitor grande deja de ver su herramienta como una columna estrecha entre dos franjas vacías (FR-048), sin que el móvil —donde más se usa— cambie en nada.
+
+**El detalle que arregla la fila huérfana** (FR-049): el resumen de actividad son **cinco** cifras, y una rejilla que las coloca «las que quepan» produce filas de cuatro más una. Se reparte en un número de columnas declarado por anchura, de forma que nunca quede una sola cifra suelta.
+
+---
+
+---
+
+## Hallazgo al cerrar el diseño — la escala contra su propio requisito
+
+Al comprobar la escala contra FR-032 apareció una contradicción **en la propia spec**: el requisito exigía 4 px mínimos entre niveles, y la escala elegida pone el apoyo a 14 px con el texto base a 16. Dos píxeles, exactamente el defecto que originó el requisito.
+
+**Cómo se resuelve**: el requisito estaba mal enunciado, no la escala. Los 2 px que molestan son los que separan un **título de bloque** del párrafo que le sigue, porque un título tiene que anunciarse; los 2 px entre el texto normal y el texto de apoyo son el patrón correcto de toda la vida, y además el apoyo se distingue por color (`--color-tinta-suave`) y por su papel.
+
+FR-032 se reformula: **la distancia mínima de 4 px se exige entre el texto normal y cada nivel por encima de él** —título de bloque, título de pantalla y total—, y el nivel de apoyo queda por debajo a 2 px a propósito. La escala no cambia: 14 · 16 · 20 · 28→36 · 32.
+
+**Por qué se anota**: es el tipo de contradicción que, sin registrar, reaparece en la verificación manual como un «esto no cumple FR-032» y termina con alguien subiendo el apoyo a 12 px, que es justo lo que el suelo de 16 px quiere evitar en móvil.
 
 ## Riesgos asumidos conscientemente
 
-| Riesgo | Impacto | Postura en esta versión |
+| Riesgo | Impacto | Postura en esta revisión |
 |---|---|---|
-| Al remaquetar el PDF se parte el bloque de totales o se pierde la cabecera repetida | Alto: es el entregable | Están escritos como criterios (FR-022) y se comprueban con un presupuesto largo en el guion de verificación |
-| Tocar seis pantallas a la vez esconde sin querer algún botón | Medio | FR-014 lo prohíbe y el guion recorre pantalla por pantalla comprobando que todo lo de antes sigue estando |
-| La regla de "caducado" falla por un día | Medio, y silencioso | Cubierto con pruebas automáticas de los dos bordes (Decisión 4) |
-| Alguien cuenta "Borrador" como un estado de negocio y espera poder marcarlo | Bajo | La etiqueta es informativa y no hay ningún control para cambiarla; Enviado/Aceptado/Rechazado quedaron fuera de alcance con su motivo escrito |
+| El renombrado del espaciado descuadra las seis pantallas en silencio | Alto, y difícil de atribuir | Decisión 8: el paso 1 no cambia nada visible y se verifica antes de seguir |
+| El PDF lee un token que no es un valor plano y cae al respaldo sin avisar | Alto: documento con tamaños equivocados y nadie se entera | Decisión 5: regla escrita en el contrato. El respaldo del lector sigue existiendo, pero deja de ser un camino silencioso para los tamaños |
+| Al remaquetar el PDF se parte el bloque de totales o se pierde la cabecera repetida | Alto: es el entregable | FR-022, ya escrito; se comprueba con un presupuesto largo en el guion |
+| El total sube a 18 pt y el bloque de totales deja de caber donde cabía | Medio | Se comprueba en el mismo apartado del guion que la cabecera repetida |
+| La barra anclada arriba más el total anclado abajo dejan sin sitio al editor en un móvil pequeño | Medio | Decisión 10, con salida escrita: dejar de anclar en móvil antes que esconder accesos |
+| La familia de titulares resulta ruidosa en títulos largos | Bajo | Limitada al título de pantalla y a la marca; la salida es caer a una sola familia sin rehacer nada |
+| El acento del documento choca con el logo del freelancer | Bajo | Acento fijo y aire entre los dos; se comprueba con un logo de colores fríos |
+| Tocar seis pantallas esconde sin querer algún botón | Medio | FR-014 lo prohíbe y el guion recorre pantalla por pantalla |
 
 ## Descartado explícitamente (y por qué)
 
-- **Modo oscuro y temas alternativos**: no los pide la spec (Principio III), y duplicarían el trabajo de comprobar contraste en cada pantalla.
-- **Librería de componentes o de iconos**: dependencias nuevas contra una lista cerrada, para seis pantallas.
-- **Fuentes web**: peso, dependencia externa y un PDF que seguiría sin poder usarlas (Decisión 2).
-- **Animaciones y transiciones**: "sobria" es justo lo contrario; además penalizan al móvil.
-- **Guardar el estado Enviado/Aceptado/Rechazado**: fuera de alcance por decisión del usuario, recogida en las Clarifications de la spec.
-- **Buscar, filtrar u ordenar la lista de presupuestos**: sería funcionalidad nueva aprovechando que se toca la pantalla. La constitución dice proponerlo como spec, no colarlo.
+- **Modo oscuro y temas alternativos**: no los pide la spec (Principio III) y duplicarían el trabajo de contraste. Renuncia consciente, recogida en D4.
+- **Pedir las tipografías a un servicio externo**: filtra la dirección del freelancer a un tercero (Principio V) y rompe SC-028.
+- **Un paquete de npm para las fuentes**: dependencia nueva para copiar dos archivos.
+- **Incrustar tipografías en el PDF**: peso por documento y riesgo en la exportación en lote (Decisión 3).
+- **Librería de componentes, framework de CSS o librería de iconos**: dependencias nuevas contra una lista cerrada, para seis pantallas.
+- **Un paso de compilación que genere los tokens para pantalla y PDF desde un archivo común**: infraestructura nueva para algo que ya funciona leyendo del CSS (Decisión 1 de la v1.1).
+- **Animaciones de entrada, ilustraciones e iconografía**: fuera de alcance por la propia spec.
+- **Pruebas automáticas de interfaz o de PDF**: la verificación la hace una persona (Principio IV). Esta revisión **no añade ni una prueba automática**, porque no añade ni una regla de dominio: la situación, el cálculo y el formato no se tocan.
